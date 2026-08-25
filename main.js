@@ -366,9 +366,24 @@ const stateMapping = {
 markerBtns.forEach(btn => {
   btn.addEventListener('click', () => {
     const cardId = btn.getAttribute('aria-controls');
-    const stateName = stateMapping[cardId];
-    animateToState(stateName, cardId);
+    const isExpanded = btn.getAttribute('aria-expanded') === 'true';
+    if (isExpanded) {
+      // 이미 열려있는 마커 클릭 시 Base로 복귀
+      animateToState('base', 'card-default');
+    } else {
+      const stateName = stateMapping[cardId];
+      animateToState(stateName, cardId);
+    }
   });
+});
+
+// ===== Esc 키 입력 시 기본 Base 포메이션 & 기본 카드로 복귀 =====
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') {
+    animateToState('base', 'card-default');
+    const activeMarker = document.querySelector('.marker-btn[aria-expanded="true"]');
+    if (activeMarker) activeMarker.focus();
+  }
 });
 
 // ===== 하단 스트립 클릭 인터랙션 =====
