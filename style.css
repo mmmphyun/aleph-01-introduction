@@ -6,14 +6,14 @@
 }
 
 :root {
-  --bg:          #080808;
-  --text:        #ffffff;
-  --muted:       rgba(255, 255, 255, 0.5);
+  --bg:          #050708;
+  --text:        #f0f4f8;
+  --muted:       rgba(240, 244, 248, 0.55);
   --accent:      #d4ff3f;
-  --line:        rgba(255, 255, 255, 0.12);
-  --surface:     rgba(12, 12, 12, 0.85);
-  --glass-bg:    rgba(18, 20, 24, 0.72);
-  --glass-border:rgba(255, 255, 255, 0.12);
+  --line:        rgba(255, 255, 255, 0.14);
+  --surface:     rgba(10, 14, 16, 0.88);
+  --glass-bg:    rgba(14, 18, 24, 0.76);
+  --glass-border:rgba(212, 255, 63, 0.22);
 }
 
 html {
@@ -50,23 +50,41 @@ body {
   overflow: hidden;
 }
 
-/* ===== LOCKER ROOM BACKGROUND ===== */
+/* ===== LOCKER ROOM BACKGROUND (픽셀 아트 셰이딩 연출) ===== */
 .locker-room-bg {
   position: absolute;
   inset: 0;
-  background-color: #0b0d0e;
+  background-color: #07090b;
   background-image: 
-    radial-gradient(circle at 50% 50%, rgba(20, 30, 25, 0.3) 0%, rgba(5, 5, 5, 0.95) 100%),
+    radial-gradient(circle at 50% 50%, rgba(16, 32, 24, 0.4) 0%, rgba(3, 5, 7, 0.96) 100%),
     url('assets/locker-room.jpg');
   background-size: cover;
   background-position: center;
   opacity: 0;
-  transition: opacity 0.6s ease;
+  transition: opacity 0.65s ease;
   z-index: 0;
+  image-rendering: pixelated;
 }
 
 .locker-room-bg.visible {
   opacity: 1;
+}
+
+/* 픽셀 CRT 스캔라인 그리드 */
+.pixel-crt-grid {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    rgba(18, 16, 16, 0) 50%, 
+    rgba(0, 0, 0, 0.25) 50%
+  ), linear-gradient(
+    90deg,
+    rgba(255, 0, 0, 0.03),
+    rgba(0, 255, 0, 0.01),
+    rgba(0, 0, 255, 0.03)
+  );
+  background-size: 100% 3px, 6px 100%;
+  pointer-events: none;
 }
 
 /* ===== HERO INTRO (PHASE 1) ===== */
@@ -127,7 +145,7 @@ body {
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 40px 6vw 90px; /* 하단 스트립 여백 확보 */
+  padding: 40px 6vw 90px;
   gap: 5vw;
 }
 
@@ -140,17 +158,15 @@ body {
   width: 100%;
   height: 100%;
   max-width: 100vw;
-  transition: max-width 0.6s cubic-bezier(0.25, 1, 0.5, 1);
+  transition: max-width 0.65s cubic-bezier(0.25, 1, 0.5, 1);
 }
 
-/* 전술판 단계 활성화 시 좌측으로 축소 */
 .stage-active .board-perspective-wrapper {
   max-width: min(44vw, 480px);
 }
 
 .tactical-board {
   position: relative;
-  /* 세로 피치 비율 (68:105) */
   width: 100vw;
   height: 100vh;
   aspect-ratio: 68 / 105;
@@ -167,41 +183,41 @@ body {
   overflow: hidden;
 }
 
-/* 전술판 이젤 사다리꼴 변형 상태 */
+/* 이젤 사다리꼴 변형 상태 */
 .stage-active .tactical-board {
   width: min(38vw, 420px);
   height: min(65vh, 650px);
-  transform: rotateX(24deg) translateY(-10px);
+  transform: rotateX(24deg) translateY(-12px);
   border-radius: 12px;
-  border: 2px solid rgba(255, 255, 255, 0.18);
+  border: 2px solid rgba(212, 255, 63, 0.3);
   box-shadow: 
-    0 25px 50px -12px rgba(0, 0, 0, 0.85),
-    0 0 30px rgba(0, 0, 0, 0.5);
+    0 25px 50px -10px rgba(0, 0, 0, 0.9),
+    0 0 24px rgba(212, 255, 63, 0.15);
 }
 
-/* 캔버스 및 레이어 */
+/* 캔버스 및 픽셀 셰이딩 */
 #pitch-canvas {
   position: absolute;
   inset: 0;
   width: 100%;
   height: 100%;
   display: block;
-  background: #14281a;
+  background: #112619;
   image-rendering: pixelated;
   image-rendering: crisp-edges;
 }
 
 #stadium-img { display: none; }
 
-.board-canvas-overlay {
+.board-pixel-overlay {
   position: absolute;
   inset: 0;
-  background: rgba(0, 0, 0, 0.35);
-  transition: background 0.5s ease;
-}
-
-.stage-active .board-canvas-overlay {
-  background: rgba(0, 0, 0, 0.55);
+  background: 
+    linear-gradient(rgba(0,0,0,0.2) 50%, rgba(0,0,0,0.4) 50%),
+    radial-gradient(circle at center, transparent 40%, rgba(0,0,0,0.7) 100%);
+  background-size: 100% 4px, 100% 100%;
+  pointer-events: none;
+  opacity: 0.7;
 }
 
 .pitch-svg {
@@ -213,6 +229,7 @@ body {
   opacity: 0;
   transition: opacity 0.5s ease;
   pointer-events: none;
+  filter: drop-shadow(0 0 2px rgba(212, 255, 63, 0.4));
 }
 
 .stage-active .pitch-svg {
@@ -247,7 +264,6 @@ body {
   font-family: inherit;
   cursor: default;
   padding: 6px;
-  transition: transform 0.2s ease;
 }
 
 .marker-dot {
@@ -255,28 +271,29 @@ body {
   width: 8px;
   height: 8px;
   border-radius: 50%;
-  background: rgba(255, 255, 255, 0.45);
+  background: rgba(255, 255, 255, 0.5);
+  box-shadow: 0 0 4px rgba(255, 255, 255, 0.4);
 }
 
 .marker-label {
-  font-size: 0.5rem;
+  font-size: 0.52rem;
   font-weight: 700;
   letter-spacing: 0.08em;
-  color: rgba(255, 255, 255, 0.35);
+  color: rgba(255, 255, 255, 0.4);
   pointer-events: none;
 }
 
-/* Regista 마커 */
+/* Regista 마커 (6번 딥라잉 피벗) */
 .marker-regista .marker-dot {
   background: var(--accent);
-  box-shadow: 0 0 10px var(--accent);
-  width: 10px;
-  height: 10px;
+  box-shadow: 0 0 12px var(--accent);
+  width: 11px;
+  height: 11px;
 }
 
 .marker-regista .marker-label {
   color: var(--accent);
-  opacity: 0.95;
+  opacity: 1;
 }
 
 /* 활성 인터랙티브 마커 버튼 */
@@ -293,21 +310,21 @@ body {
 }
 
 .marker-btn .marker-label {
-  color: rgba(255, 255, 255, 0.85);
+  color: rgba(255, 255, 255, 0.9);
   font-size: 0.56rem;
 }
 
 @keyframes markerPulse {
-  0%   { box-shadow: 0 0 0 0 rgba(212, 255, 63, 0.6); }
-  60%  { box-shadow: 0 0 0 7px rgba(212, 255, 63, 0); }
+  0%   { box-shadow: 0 0 0 0 rgba(212, 255, 63, 0.7); }
+  60%  { box-shadow: 0 0 0 8px rgba(212, 255, 63, 0); }
   100% { box-shadow: 0 0 0 0 rgba(212, 255, 63, 0); }
 }
 
 .marker-btn:hover .marker-dot,
 .marker-btn:focus-visible .marker-dot {
   background: var(--accent);
-  box-shadow: 0 0 14px var(--accent);
-  transform: scale(1.2);
+  box-shadow: 0 0 16px var(--accent);
+  transform: scale(1.25);
   animation: none;
 }
 
@@ -315,9 +332,9 @@ body {
 
 .marker-btn[aria-expanded="true"] .marker-dot {
   background: var(--accent);
-  box-shadow: 0 0 16px var(--accent);
+  box-shadow: 0 0 18px var(--accent);
   animation: none;
-  transform: scale(1.25);
+  transform: scale(1.3);
 }
 
 .marker-btn[aria-expanded="true"] .marker-label {
@@ -352,11 +369,11 @@ body {
   justify-content: center;
   padding: 32px 36px;
   background: var(--glass-bg);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
   border: 1px solid var(--glass-border);
   border-radius: 16px;
-  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5);
   opacity: 0;
   visibility: hidden;
   transform: translateY(15px);

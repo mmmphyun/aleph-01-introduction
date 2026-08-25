@@ -7,74 +7,73 @@ function easeInOut(t) {
   return t < 0.5 ? 2 * t * t : -1 + (4 - 2 * t) * t;
 }
 
-// ===== 11명 세로 포메이션 데이터 (세로 68 x 105 기준 %, 0:상단 골대 ~ 100:하단 골대) =====
-// 인덱스: 0=GK 1=LB 2=LCB 3=RCB 4=RB 5=LCM 6=Regista 7=Volante 8=LW 9=ST 10=RW
+// ===== 11명 세로 포메이션 데이터 (0:상단 골대 ~ 100:하단 골대) =====
+// 인덱스: 0=GK 1=LB 2=LCB 3=RCB 4=RB[활성] 5=LCM 6=Regista[6번 피벗] 7=CM[활성] 8=LW 9=ST[활성] 10=RW
 const POSITIONS = {
   base: [
-    { x: 50.0, y: 95.0 }, // GK (아군 골대 앞)
-    { x: 16.0, y: 80.0 }, // LB
-    { x: 38.0, y: 82.0 }, // LCB
-    { x: 62.0, y: 82.0 }, // RCB
-    { x: 84.0, y: 80.0 }, // RB [활성 - 풀백]
-    { x: 28.0, y: 60.0 }, // LCM
-    { x: 50.0, y: 66.0 }, // Regista [본인]
-    { x: 50.0, y: 54.0 }, // Volante [활성 - 볼란치]
-    { x: 18.0, y: 35.0 }, // LW
-    { x: 50.0, y: 28.0 }, // ST [활성 - 스트라이커]
-    { x: 82.0, y: 35.0 }, // RW
+    { x: 50.0, y: 96.0 }, // GK
+    { x: 15.0, y: 82.0 }, // LB
+    { x: 36.0, y: 84.0 }, // LCB
+    { x: 64.0, y: 84.0 }, // RCB
+    { x: 85.0, y: 82.0 }, // RB [활성 - 풀백]
+    { x: 26.0, y: 60.0 }, // LCM
+    { x: 50.0, y: 72.0 }, // Regista [6번 딥라잉 피벗/앵커]
+    { x: 58.0, y: 56.0 }, // CM [활성 - 전방 연계 미드필더]
+    { x: 16.0, y: 32.0 }, // LW
+    { x: 50.0, y: 25.0 }, // ST [활성 - 스트라이커]
+    { x: 84.0, y: 32.0 }, // RW
   ],
   striker: [
-    // 공격 상황: 전방 압박, 상대 박스(상단) 근처 집결
-    { x: 50.0, y: 92.0 }, // GK
-    { x: 14.0, y: 50.0 }, // LB (높은 라인)
-    { x: 35.0, y: 60.0 }, // LCB (하프라인 전진)
-    { x: 65.0, y: 60.0 }, // RCB (하프라인 전진)
-    { x: 86.0, y: 50.0 }, // RB (높은 라인)
-    { x: 25.0, y: 38.0 }, // LCM
-    { x: 50.0, y: 46.0 }, // Regista
-    { x: 55.0, y: 36.0 }, // Volante
-    { x: 18.0, y: 20.0 }, // LW (상대 박스 옆)
-    { x: 50.0, y: 16.0 }, // ST (상대 박스 안 침투)
-    { x: 82.0, y: 20.0 }, // RW (상대 박스 옆)
+    // 공격 상황: 전방 강력 압박 (ST 박스 침투, LW/RW/CM 좁혀오며 Regista 하프라인 전진)
+    { x: 50.0, y: 90.0 }, // GK (하프라인 뒤 커버)
+    { x: 12.0, y: 44.0 }, // LB (하이 라인)
+    { x: 34.0, y: 54.0 }, // LCB (하프라인 전진)
+    { x: 66.0, y: 54.0 }, // RCB (하프라인 전진)
+    { x: 88.0, y: 44.0 }, // RB (하이 라인)
+    { x: 24.0, y: 30.0 }, // LCM (하프스페이스 지원)
+    { x: 50.0, y: 45.0 }, // Regista -> [하프라인 부근까지 전진하여 세컨볼 장악]
+    { x: 62.0, y: 24.0 }, // CM -> [박스 아크 부근 전진 침투 지원]
+    { x: 20.0, y: 15.0 }, // LW (상대 박스 안 쇄도)
+    { x: 50.0, y: 10.0 }, // ST -> [골문 정면 깊숙이 침투!]
+    { x: 80.0, y: 15.0 }, // RW (상대 박스 안 쇄도)
   ],
   volante: [
-    // 빌드업: 4-3-3 -> 3-4-3 (볼란치 하강 라볼피아나, 양 풀백 전진)
-    { x: 50.0, y: 95.0 }, // GK
-    { x: 15.0, y: 56.0 }, // LB (윙백 전진)
-    { x: 28.0, y: 82.0 }, // LCB (3백 좌측)
-    { x: 72.0, y: 82.0 }, // RCB (3백 우측)
-    { x: 85.0, y: 56.0 }, // RB (윙백 전진)
-    { x: 36.0, y: 58.0 }, // LCM
-    { x: 50.0, y: 62.0 }, // Regista
-    { x: 50.0, y: 84.0 }, // Volante -> [센터백 사이로 하강!]
-    { x: 18.0, y: 35.0 }, // LW
-    { x: 50.0, y: 28.0 }, // ST
-    { x: 82.0, y: 35.0 }, // RW
+    // 빌드업: 라볼피아나 3-4-3 (Regista 센터백 사이 하강, 양 풀백 전진, CM이 중앙에서 연결)
+    { x: 50.0, y: 96.0 }, // GK
+    { x: 12.0, y: 50.0 }, // LB (윙백 전진)
+    { x: 24.0, y: 84.0 }, // LCB (좌측 넓게 벌림)
+    { x: 76.0, y: 84.0 }, // RCB (우측 넓게 벌림)
+    { x: 88.0, y: 50.0 }, // RB (윙백 전진)
+    { x: 35.0, y: 52.0 }, // LCM (중앙 미드)
+    { x: 50.0, y: 86.0 }, // Regista -> [LCB와 RCB 사이로 깊게 내려와 3백 꼭짓점 형성!]
+    { x: 58.0, y: 48.0 }, // CM -> [중앙 전방에서 Regista 패스 받아주는 메짤라/플레이메이커]
+    { x: 16.0, y: 30.0 }, // LW
+    { x: 50.0, y: 22.0 }, // ST
+    { x: 84.0, y: 30.0 }, // RW
   ],
   fullback: [
-    // 오버래핑: 우측 풀백이 상대 우측 바이라인(상단) 끝까지 치고 올라감
-    { x: 50.0, y: 95.0 }, // GK
-    { x: 20.0, y: 72.0 }, // LB
-    { x: 35.0, y: 78.0 }, // LCB
-    { x: 62.0, y: 78.0 }, // RCB (커버)
-    { x: 88.0, y: 15.0 }, // RB -> [상대 코너 부근 오버래핑!]
-    { x: 32.0, y: 50.0 }, // LCM
-    { x: 48.0, y: 55.0 }, // Regista
-    { x: 65.0, y: 44.0 }, // Volante (우측 지원)
-    { x: 28.0, y: 24.0 }, // LW (크로스 타겟)
-    { x: 46.0, y: 18.0 }, // ST (박스 중앙 쇄도)
-    { x: 74.0, y: 22.0 }, // RW (인사이드 컷)
+    // 오버래핑: 우측 풀백 폭발적 치고 올라감 (RW 컷인, ST/LW 크로스 타겟)
+    { x: 50.0, y: 96.0 }, // GK
+    { x: 18.0, y: 70.0 }, // LB
+    { x: 32.0, y: 78.0 }, // LCB
+    { x: 60.0, y: 78.0 }, // RCB (우측 수비 커버)
+    { x: 90.0, y: 8.0 },  // RB -> [상대 우측 코너 바이라인 끝까지 폭발적 오버래핑!]
+    { x: 28.0, y: 46.0 }, // LCM
+    { x: 46.0, y: 56.0 }, // Regista (후방 조율 및 전환 패스 기점)
+    { x: 68.0, y: 38.0 }, // CM (우측 풀백 뒤 공간 지원)
+    { x: 26.0, y: 16.0 }, // LW (박스 침투)
+    { x: 48.0, y: 12.0 }, // ST (중앙 헤더 쇄도)
+    { x: 72.0, y: 18.0 }, // RW (안쪽으로 좁히며 컷인)
   ],
 };
 
 // ===== 스크롤 구간 정의 =====
-// [start, end, fromState, toState, cardTarget]
 const SCROLL_ZONES = [
-  [0.00, 0.30, null,      null,      null],           // 히어로 및 픽셀화 시작
-  [0.30, 0.44, null,      'base',    'card-striker'], // 전술판 눕히며 등장 (기본 대형)
-  [0.44, 0.62, 'base',    'striker', 'card-striker'], // 1) Striker 공격
-  [0.62, 0.78, 'striker', 'volante', 'card-volante'], // 2) Volante 빌드업 (3-4-3)
-  [0.78, 0.96, 'volante', 'fullback','card-fullback'],// 3) Fullback 오버래핑
+  [0.00, 0.28, null,      null,      null],           // 픽셀화 시작
+  [0.28, 0.44, null,      'base',    'card-striker'], // 전술판 눕히며 등장
+  [0.44, 0.62, 'base',    'striker', 'card-striker'], // 1) ST 공격 압박
+  [0.62, 0.78, 'striker', 'volante', 'card-volante'], // 2) Regista 빌드업
+  [0.78, 0.96, 'volante', 'fullback','card-fullback'],// 3) RB 오버래핑
 ];
 
 // ===== DOM 참조 =====
@@ -89,7 +88,7 @@ const glassCards      = document.querySelectorAll('.glass-card');
 const markerBtns      = document.querySelectorAll('.marker-btn');
 const stripItems      = document.querySelectorAll('.strip-item');
 
-// 선수 마커 요소 정렬 (data-index 0~10)
+// 선수 마커 정렬 (data-index 0~10)
 const markerEls = Array.from({ length: 11 });
 document.querySelectorAll('.marker[data-index]').forEach(el => {
   markerEls[parseInt(el.dataset.index, 10)] = el;
@@ -106,15 +105,15 @@ let clickRafId     = null;
 
 const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
-// ===== 캔버스 크기 리사이즈 =====
+// ===== 캔버스 리사이즈 =====
 function resizeCanvas() {
   const rect = canvas.getBoundingClientRect();
-  canvas.width  = Math.max(rect.width, 300);
-  canvas.height = Math.max(rect.height, 450);
+  canvas.width  = Math.max(rect.width, 320);
+  canvas.height = Math.max(rect.height, 480);
   if (imgLoaded) renderFrame();
 }
 
-// ===== 스크롤 진행도 계산 (0 -> 1) =====
+// ===== 스크롤 진행도 계산 =====
 function getProgress() {
   const scrollRange = heroEl.offsetHeight - window.innerHeight;
   return Math.max(0, Math.min(1, window.scrollY / scrollRange));
@@ -158,7 +157,6 @@ function updateActiveCard(cardId) {
     }
   });
 
-  // 해당 마커 및 스트립 aria 동기화
   markerBtns.forEach(btn => {
     const match = btn.getAttribute('aria-controls') === cardId;
     btn.setAttribute('aria-expanded', match ? 'true' : 'false');
@@ -166,7 +164,7 @@ function updateActiveCard(cardId) {
 }
 
 // ===== 클릭 시 rAF 타임 기반 포메이션 애니메이션 =====
-function animateToState(targetState, cardId, duration = 700) {
+function animateToState(targetState, cardId, duration = 650) {
   if (clickRafId) cancelAnimationFrame(clickRafId);
   clickAnimating = true;
 
@@ -202,35 +200,58 @@ function animateToState(targetState, cardId, duration = 700) {
   clickRafId = requestAnimationFrame(tick);
 }
 
-// ===== Canvas 픽셀화 렌더링 =====
+// ===== 90도 회전 및 픽셀화 렌더링 =====
 const MIN_PX = 1;
 const MAX_PX = 6;
 
-function drawPixelated(pixelSize) {
+function drawPixelatedRotated(pixelSize) {
   const w = canvas.width;
   const h = canvas.height;
 
+  // 1단계: 원본 가로 이미지를 세로(90도 회전)로 오프스크린에 그리기
+  const rotCanvas = document.createElement('canvas');
+  rotCanvas.width = img.naturalHeight;
+  rotCanvas.height = img.naturalWidth;
+  const rotCtx = rotCanvas.getContext('2d');
+  
+  rotCtx.translate(rotCanvas.width / 2, rotCanvas.height / 2);
+  rotCtx.rotate(90 * Math.PI / 180);
+  rotCtx.drawImage(img, -img.naturalWidth / 2, -img.naturalHeight / 2);
+
+  // 2단계: 세로화된 이미지를 캔버스 크기에 맞게 도트화
   if (pixelSize <= 1) {
     ctx.imageSmoothingEnabled = true;
-    // 세로 이미지 cover 크롭 로직
-    const iA = img.naturalWidth / img.naturalHeight;
+    const iA = rotCanvas.width / rotCanvas.height;
     const cA = w / h;
     let sx, sy, sw, sh;
     if (iA > cA) {
-      sh = img.naturalHeight; sw = sh * cA;
-      sx = (img.naturalWidth - sw) / 2; sy = 0;
+      sh = rotCanvas.height; sw = sh * cA;
+      sx = (rotCanvas.width - sw) / 2; sy = 0;
     } else {
-      sw = img.naturalWidth; sh = sw / cA;
-      sx = 0; sy = (img.naturalHeight - sh) / 2;
+      sw = rotCanvas.width; sh = sw / cA;
+      sx = 0; sy = (rotCanvas.height - sh) / 2;
     }
-    ctx.drawImage(img, sx, sy, sw, sh, 0, 0, w, h);
+    ctx.drawImage(rotCanvas, sx, sy, sw, sh, 0, 0, w, h);
   } else {
     const sw = Math.max(1, Math.floor(w / pixelSize));
     const sh = Math.max(1, Math.floor(h / pixelSize));
     offscreen.width = sw;
     offscreen.height = sh;
     offCtx.imageSmoothingEnabled = true;
-    offCtx.drawImage(img, 0, 0, sw, sh);
+    
+    // 크롭 계산
+    const iA = rotCanvas.width / rotCanvas.height;
+    const cA = sw / sh;
+    let sx, sy, scw, sch;
+    if (iA > cA) {
+      sch = rotCanvas.height; scw = sch * cA;
+      sx = (rotCanvas.width - scw) / 2; sy = 0;
+    } else {
+      scw = rotCanvas.width; sch = scw / cA;
+      sx = 0; sy = (rotCanvas.height - sch) / 2;
+    }
+    offCtx.drawImage(rotCanvas, sx, sy, scw, sch, 0, 0, sw, sh);
+    
     ctx.imageSmoothingEnabled = false;
     ctx.clearRect(0, 0, w, h);
     ctx.drawImage(offscreen, 0, 0, sw, sh, 0, 0, w, h);
@@ -240,15 +261,15 @@ function drawPixelated(pixelSize) {
 // ===== 프레임 렌더링 루프 =====
 function renderFrame() {
   const progress = getProgress();
-  const pixelSize = Math.round(MIN_PX + (MAX_PX - MIN_PX) * Math.min(progress / 0.32, 1));
+  const pixelSize = Math.round(MIN_PX + (MAX_PX - MIN_PX) * Math.min(progress / 0.30, 1));
 
-  drawPixelated(pixelSize);
+  drawPixelatedRotated(pixelSize);
 
   // 인트로 페이드아웃
   heroIntro.style.opacity = String(Math.max(0, 1 - progress / 0.25 * 2.5));
 
   // 전술판 및 라커룸 배경 활성화
-  if (progress >= 0.30) {
+  if (progress >= 0.28) {
     heroSticky.classList.add('stage-active');
     lockerRoomBg.classList.add('visible');
   } else {
@@ -276,8 +297,7 @@ function onImgLoad() {
 
 img.addEventListener('load', onImgLoad);
 img.addEventListener('error', () => {
-  // 이미지 로드 실패 시 다크 그린 기본 피치 렌더
-  ctx.fillStyle = '#14281a';
+  ctx.fillStyle = '#112619';
   ctx.fillRect(0, 0, canvas.width, canvas.height);
   applyReducedMotionState();
 });
@@ -286,7 +306,7 @@ if (img.complete && img.naturalWidth > 0) onImgLoad();
 
 // ===== 스크롤 & 리사이즈 리스너 =====
 window.addEventListener('scroll', () => {
-  clickAnimating = false; // 스크롤 시 자동 애니메이션 중단 후 스크롤 우선
+  clickAnimating = false;
   if (rafPending) return;
   rafPending = true;
   requestAnimationFrame(() => {
@@ -304,7 +324,7 @@ function applyReducedMotionState() {
   lockerRoomBg.classList.add('visible');
   applyPositions(POSITIONS.base);
   updateActiveCard('card-striker');
-  if (imgLoaded) drawPixelated(MAX_PX);
+  if (imgLoaded) drawPixelatedRotated(MAX_PX);
 }
 
 if (reduceMotion) applyReducedMotionState();
@@ -331,9 +351,9 @@ stripItems.forEach(btn => {
     const stateName = btn.dataset.state;
 
     if (!heroSticky.classList.contains('stage-active')) {
-      const targetScroll = (heroEl.offsetHeight - window.innerHeight) * 0.45;
+      const targetScroll = (heroEl.offsetHeight - window.innerHeight) * 0.42;
       window.scrollTo({ top: targetScroll, behavior: reduceMotion ? 'auto' : 'smooth' });
-      setTimeout(() => animateToState(stateName, cardId), reduceMotion ? 0 : 550);
+      setTimeout(() => animateToState(stateName, cardId), reduceMotion ? 0 : 500);
     } else {
       animateToState(stateName, cardId);
     }
