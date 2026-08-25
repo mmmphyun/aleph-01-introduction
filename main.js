@@ -216,12 +216,14 @@ function animateToState(targetState, cardId, duration = 650) {
   clickRafId = requestAnimationFrame(tick);
 }
 
-// ===== stadium.jpg 세로(rotatedCanvas) 기준 피치 바운딩 박스 =====
+// ===== stadium.jpg 세로(rotatedCanvas) 기준 실제 잔디 피치 정밀 바운딩 박스 =====
+// 원본 stadium.jpg(가로)의 실제 피치 라인: x(23.4% ~ 75.8%), y(26.2% ~ 70.8%)
+// 90도 회전 후 세로 피치 바운딩 박스:
 const PITCH_CROP = {
-  x: 0.288,
-  y: 0.226,
-  w: 0.462,
-  h: 0.538
+  x: 0.292,  // 좌우 터치라인 시작점 (1 - 0.708)
+  y: 0.234,  // 상단 엔드라인 시작점
+  w: 0.446,  // 순수 터치라인 간 폭 (0.708 - 0.262)
+  h: 0.524   // 순수 골라인 간 높이 (0.758 - 0.234)
 };
 
 // ===== 세로 고정 줌인 -> 피치 크롭 도트화 렌더링 =====
@@ -238,6 +240,7 @@ function drawVerticalStadium(pixelSize, progress) {
 
   const cropT = Math.min(progress / 0.28, 1);
 
+  // 초기 히어로: 전체 세로 사진 cover
   let full_sx = 0, full_sy = 0, full_sw = rw, full_sh = rh;
   const rA = rw / rh;
   const cA = w / h;
@@ -249,6 +252,7 @@ function drawVerticalStadium(pixelSize, progress) {
     full_sy = (rh - full_sh) / 2;
   }
 
+  // 전술판 단계: 정확한 잔디 피치 영역
   const target_sx = rw * PITCH_CROP.x;
   const target_sy = rh * PITCH_CROP.y;
   const target_sw = rw * PITCH_CROP.w;
