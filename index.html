@@ -9,15 +9,14 @@
 </head>
 <body>
 
-  <!-- ===== HERO (450vh — 스크롤 공간) ===== -->
+  <!-- 전체 스크롤 트랙 -->
   <section class="hero" id="hero">
     <div class="hero-sticky" id="hero-sticky">
 
-      <canvas id="pitch-canvas" aria-hidden="true"></canvas>
-      <img id="stadium-img" src="assets/stadium.jpg" alt="">
-      <div class="canvas-overlay" id="canvas-overlay" aria-hidden="true"></div>
+      <!-- 라커룸 배경 (전술판 등장 시 페이드 인) -->
+      <div class="locker-room-bg" id="locker-room-bg" aria-hidden="true"></div>
 
-      <!-- Phase 1: 이름 소개 -->
+      <!-- Phase 1: 히어로 타이틀 인트로 (스크롤 전) -->
       <div class="hero-intro" id="hero-intro">
         <p class="hero-kicker">— Regista —</p>
         <h1 class="hero-name">한승윤</h1>
@@ -25,106 +24,191 @@
         <p class="hero-scroll-hint" aria-hidden="true">scroll</p>
       </div>
 
-      <!-- Phase 2: 전술판 -->
-      <div class="tactical-overlay" id="tactical-overlay" aria-hidden="true">
-        <div class="pitch-wrapper">
-          <!-- 피치 SVG 라인 -->
-          <svg class="pitch-svg" viewBox="0 0 105 68" aria-hidden="true" focusable="false">
-            <rect x="0.5" y="0.5" width="104" height="67" fill="none" stroke="white" stroke-width="0.6" opacity="0.45"/>
-            <line x1="52.5" y1="0.5" x2="52.5" y2="67.5" stroke="white" stroke-width="0.6" opacity="0.45"/>
-            <circle cx="52.5" cy="34" r="9.15" fill="none" stroke="white" stroke-width="0.6" opacity="0.45"/>
-            <circle cx="52.5" cy="34" r="0.7" fill="white" opacity="0.45"/>
-            <rect x="0.5" y="13.84" width="16.5" height="40.32" fill="none" stroke="white" stroke-width="0.6" opacity="0.45"/>
-            <rect x="88"   y="13.84" width="16.5" height="40.32" fill="none" stroke="white" stroke-width="0.6" opacity="0.45"/>
-            <rect x="0.5" y="24.84" width="5.5" height="18.32" fill="none" stroke="white" stroke-width="0.6" opacity="0.45"/>
-            <rect x="99"  y="24.84" width="5.5" height="18.32" fill="none" stroke="white" stroke-width="0.6" opacity="0.45"/>
-            <circle cx="11" cy="34" r="0.7" fill="white" opacity="0.45"/>
-            <circle cx="94" cy="34" r="0.7" fill="white" opacity="0.45"/>
-          </svg>
+      <!-- 메인 스테이지 (전술판 좌측 + 글래스모피즘 우측) -->
+      <div class="stage-container" id="stage-container">
+        
+        <!-- [좌측] 3D 이젤 세로 전술판 영역 -->
+        <div class="board-perspective-wrapper">
+          <div class="tactical-board" id="tactical-board">
+            
+            <!-- 캔버스 (스크롤에 따라 사진이 픽셀화되며 전술판 배경이 됨) -->
+            <canvas id="pitch-canvas" aria-hidden="true"></canvas>
+            <img id="stadium-img" src="assets/stadium.jpg" alt="">
+            <div class="board-canvas-overlay" aria-hidden="true"></div>
 
-          <!-- 선수 마커 (11명)
-               data-index = POSITIONS 배열 순서와 동일
-               0:GK 1:LB 2:LCB 3:RCB 4:RB 5:LCM 6:Regista 7:Volante 8:LW 9:ST 10:RW -->
-          <div class="pitch-markers" role="group" aria-label="포지션별 소개">
+            <!-- 세로 피치 라인 SVG (viewBox: 68 x 105) -->
+            <svg class="pitch-svg" viewBox="0 0 68 105" aria-hidden="true" focusable="false">
+              <!-- 외곽선 -->
+              <rect x="0.5" y="0.5" width="67" height="104" fill="none" stroke="white" stroke-width="0.7" opacity="0.45"/>
+              <!-- 하프라인 -->
+              <line x1="0.5" y1="52.5" x2="67.5" y2="52.5" stroke="white" stroke-width="0.7" opacity="0.45"/>
+              <!-- 센터 서클 & 스팟 -->
+              <circle cx="34" cy="52.5" r="9.15" fill="none" stroke="white" stroke-width="0.7" opacity="0.45"/>
+              <circle cx="34" cy="52.5" r="0.7" fill="white" opacity="0.5"/>
+              
+              <!-- 상단 페널티 박스 (상대 진영) -->
+              <rect x="13.84" y="0.5" width="40.32" height="16.5" fill="none" stroke="white" stroke-width="0.7" opacity="0.45"/>
+              <rect x="24.84" y="0.5" width="18.32" height="5.5" fill="none" stroke="white" stroke-width="0.7" opacity="0.45"/>
+              <circle cx="34" cy="11" r="0.7" fill="white" opacity="0.5"/>
 
-            <!-- 비활성 마커 (8명) -->
-            <div class="marker" data-index="0" style="--mx:4.8%;--my:50%">
-              <span class="marker-dot" aria-hidden="true"></span>
-              <span class="marker-label">GK</span>
-            </div>
-            <div class="marker" data-index="1" style="--mx:19%;--my:17.6%">
-              <span class="marker-dot" aria-hidden="true"></span>
-              <span class="marker-label">LB</span>
-            </div>
-            <div class="marker" data-index="2" style="--mx:21.9%;--my:38.2%">
-              <span class="marker-dot" aria-hidden="true"></span>
-              <span class="marker-label">LCB</span>
-            </div>
-            <div class="marker" data-index="3" style="--mx:21.9%;--my:61.8%">
-              <span class="marker-dot" aria-hidden="true"></span>
-              <span class="marker-label">RCB</span>
-            </div>
-            <div class="marker" data-index="5" style="--mx:38.1%;--my:29.4%">
-              <span class="marker-dot" aria-hidden="true"></span>
-              <span class="marker-label">LCM</span>
-            </div>
-            <div class="marker marker-regista" data-index="6" style="--mx:33.3%;--my:50%">
-              <span class="marker-dot" aria-hidden="true"></span>
-              <span class="marker-label">REG</span>
-              <span class="sr-only">Regista · 한승윤</span>
-            </div>
-            <div class="marker" data-index="8" style="--mx:64.8%;--my:17.6%">
-              <span class="marker-dot" aria-hidden="true"></span>
-              <span class="marker-label">LW</span>
-            </div>
-            <div class="marker" data-index="10" style="--mx:64.8%;--my:82.4%">
-              <span class="marker-dot" aria-hidden="true"></span>
-              <span class="marker-label">RW</span>
+              <!-- 하단 페널티 박스 (아군 진영) -->
+              <rect x="13.84" y="88" width="40.32" height="16.5" fill="none" stroke="white" stroke-width="0.7" opacity="0.45"/>
+              <rect x="24.84" y="99" width="18.32" height="5.5" fill="none" stroke="white" stroke-width="0.7" opacity="0.45"/>
+              <circle cx="34" cy="94" r="0.7" fill="white" opacity="0.5"/>
+            </svg>
+
+            <!-- 11명 선수 마커 (세로 피치 좌표계: left%, top%) -->
+            <div class="pitch-markers" role="group" aria-label="포지션별 전술판">
+              <!-- 0:GK (하단 골대) -->
+              <div class="marker" data-index="0" style="--mx:50%;--my:95%">
+                <span class="marker-dot" aria-hidden="true"></span>
+                <span class="marker-label">GK</span>
+              </div>
+              <!-- 1:LB -->
+              <div class="marker" data-index="1" style="--mx:16%;--my:80%">
+                <span class="marker-dot" aria-hidden="true"></span>
+                <span class="marker-label">LB</span>
+              </div>
+              <!-- 2:LCB -->
+              <div class="marker" data-index="2" style="--mx:38%;--my:82%">
+                <span class="marker-dot" aria-hidden="true"></span>
+                <span class="marker-label">LCB</span>
+              </div>
+              <!-- 3:RCB -->
+              <div class="marker" data-index="3" style="--mx:62%;--my:82%">
+                <span class="marker-dot" aria-hidden="true"></span>
+                <span class="marker-label">RCB</span>
+              </div>
+              <!-- 4:RB [활성 마커 - 풀백] -->
+              <button class="marker marker-btn" data-index="4" id="marker-rb"
+                      style="--mx:84%;--my:80%"
+                      aria-expanded="false"
+                      aria-controls="card-fullback">
+                <span class="marker-dot" aria-hidden="true"></span>
+                <span class="marker-label">RB</span>
+              </button>
+              <!-- 5:LCM -->
+              <div class="marker" data-index="5" style="--mx:28%;--my:60%">
+                <span class="marker-dot" aria-hidden="true"></span>
+                <span class="marker-label">LCM</span>
+              </div>
+              <!-- 6:Regista [본인 - 딥라잉 플레이메이커] -->
+              <div class="marker marker-regista" data-index="6" style="--mx:50%;--my:66%">
+                <span class="marker-dot" aria-hidden="true"></span>
+                <span class="marker-label">REG</span>
+                <span class="sr-only">Regista · 한승윤</span>
+              </div>
+              <!-- 7:Volante [활성 마커 - 볼란치] -->
+              <button class="marker marker-btn" data-index="7" id="marker-volante"
+                      style="--mx:50%;--my:54%"
+                      aria-expanded="false"
+                      aria-controls="card-volante">
+                <span class="marker-dot" aria-hidden="true"></span>
+                <span class="marker-label">VOL</span>
+              </button>
+              <!-- 8:LW -->
+              <div class="marker" data-index="8" style="--mx:18%;--my:35%">
+                <span class="marker-dot" aria-hidden="true"></span>
+                <span class="marker-label">LW</span>
+              </div>
+              <!-- 9:ST [활성 마커 - 스트라이커] -->
+              <button class="marker marker-btn" data-index="9" id="marker-striker"
+                      style="--mx:50%;--my:28%"
+                      aria-expanded="false"
+                      aria-controls="card-striker">
+                <span class="marker-dot" aria-hidden="true"></span>
+                <span class="marker-label">ST</span>
+              </button>
+              <!-- 10:RW -->
+              <div class="marker" data-index="10" style="--mx:82%;--my:35%">
+                <span class="marker-dot" aria-hidden="true"></span>
+                <span class="marker-label">RW</span>
+              </div>
             </div>
 
-            <!-- 활성 마커 (3명) -->
-            <button class="marker marker-btn" data-index="4"
-                    id="marker-rb"
-                    style="--mx:19%;--my:82.4%"
-                    aria-expanded="false"
-                    aria-controls="panel-fullback">
-              <span class="marker-dot" aria-hidden="true"></span>
-              <span class="marker-label">RB</span>
-            </button>
-
-            <button class="marker marker-btn" data-index="7"
-                    id="marker-volante"
-                    style="--mx:45.7%;--my:50%"
-                    aria-expanded="false"
-                    aria-controls="panel-volante">
-              <span class="marker-dot" aria-hidden="true"></span>
-              <span class="marker-label">VOL</span>
-            </button>
-
-            <button class="marker marker-btn" data-index="9"
-                    id="marker-striker"
-                    style="--mx:71.4%;--my:50%"
-                    aria-expanded="false"
-                    aria-controls="panel-striker">
-              <span class="marker-dot" aria-hidden="true"></span>
-              <span class="marker-label">ST</span>
-            </button>
           </div>
         </div>
-        <p class="tactical-hint">마커를 선택해 자세히 보기</p>
+
+        <!-- [우측] 글래스모피즘 상세 설명 영역 -->
+        <div class="content-display-area" id="content-display-area">
+          
+          <!-- Striker: 마인크래프트 온보딩 자동화 -->
+          <article class="glass-card" id="card-striker" data-state="striker">
+            <p class="card-position-tag">Striker · Project</p>
+            <h2>마인크래프트 온보딩 자동화</h2>
+            <dl class="sar-list">
+              <div class="sar-row">
+                <dt>상황</dt>
+                <dd>관리자와 뉴비가 스케줄을 맞춰 수동으로 안내를 진행해 이탈률이 높았습니다.</dd>
+              </div>
+              <div class="sar-row">
+                <dt>행동</dt>
+                <dd>웹 위키, 디스코드 봇, 플러그인을 연동해 온보딩 전 과정을 자동화했습니다.</dd>
+              </div>
+              <div class="sar-row">
+                <dt>결과</dt>
+                <dd>서비스 완성 후 3개월 운영, 약 100명이 이탈 없이 온보딩을 완료했습니다.</dd>
+              </div>
+            </dl>
+            <p class="card-footer-note">현재 후속 프로젝트로 디스코드 커뮤니티 세터를 개발 중입니다.</p>
+          </article>
+
+          <!-- Volante: 작업 방식 -->
+          <article class="glass-card" id="card-volante" data-state="volante">
+            <p class="card-position-tag">Volante · Method</p>
+            <h2>분석하고, 만든다</h2>
+            <dl class="sar-list">
+              <div class="sar-row">
+                <dt>상황</dt>
+                <dd>반복되는 비효율이나 불편함을 만날 때마다 구조를 분석하게 됩니다.</dd>
+              </div>
+              <div class="sar-row">
+                <dt>행동</dt>
+                <dd>아이디어를 메모하고 구체화한 뒤 직접 구현을 시도합니다.</dd>
+              </div>
+              <div class="sar-row">
+                <dt>결과</dt>
+                <dd>책임이 주어진 프로젝트는 반드시 완수합니다. 마인크래프트 서버 자동화가 그 사례입니다.</dd>
+              </div>
+            </dl>
+          </article>
+
+          <!-- Full-back: 축구 전술 분석 -->
+          <article class="glass-card" id="card-fullback" data-state="fullback">
+            <p class="card-position-tag">Full-back · Interest</p>
+            <h2>전술을 분석하고, 재현한다</h2>
+            <dl class="sar-list">
+              <div class="sar-row">
+                <dt>상황</dt>
+                <dd>경기를 보다가 펩 과르디올라의 오라일리 기용 방식이 궁금해졌습니다.</dd>
+              </div>
+              <div class="sar-row">
+                <dt>행동</dt>
+                <dd>FM에서 동일 전술을 직접 구현해 작동 방식을 검증했습니다.</dd>
+              </div>
+              <div class="sar-row">
+                <dt>결과</dt>
+                <dd>역습 시 취약점 확인, 좌측 하프스페이스에서 도쿠-오라일리의 분업이 예상보다 파괴적임을 발견했습니다.</dd>
+              </div>
+            </dl>
+            <p class="card-footer-note">StatsBomb 데이터 기반 전술 움직임 시각화 서비스를 개발 중입니다.</p>
+          </article>
+
+        </div>
+
       </div>
 
-      <!-- 히어로 하단 스트립 (항상 표시 — C10/C11) -->
+      <!-- 하단 요약 스트립 (상시 고정 노출 — C10/C11 충족) -->
       <div class="hero-strip" aria-label="주요 활동 요약">
-        <button class="strip-item" data-panel="panel-striker" data-state="striker">
+        <button class="strip-item" data-target="card-striker" data-state="striker">
           <span class="strip-label">PROJECT</span>
           <span class="strip-title">마인크래프트 온보딩 자동화</span>
         </button>
-        <button class="strip-item" data-panel="panel-volante" data-state="volante">
+        <button class="strip-item" data-target="card-volante" data-state="volante">
           <span class="strip-label">METHOD</span>
           <span class="strip-title">분석 → 설계 → 구현</span>
         </button>
-        <button class="strip-item" data-panel="panel-fullback" data-state="fullback">
+        <button class="strip-item" data-target="card-fullback" data-state="fullback">
           <span class="strip-label">INTEREST</span>
           <span class="strip-title">축구 전술 분석</span>
         </button>
@@ -132,42 +216,6 @@
 
     </div>
   </section>
-
-  <!-- ===== 상세 패널 ===== -->
-  <article class="panel" id="panel-striker" aria-label="마인크래프트 온보딩 자동화">
-    <button class="panel-close" data-close="panel-striker" aria-label="패널 닫기">✕</button>
-    <p class="panel-position">Striker</p>
-    <h2>마인크래프트 온보딩 자동화</h2>
-    <dl class="sar">
-      <div class="sar-item"><dt>상황</dt><dd>관리자와 뉴비가 스케줄을 맞춰 수동으로 안내를 진행해 이탈률이 높았습니다.</dd></div>
-      <div class="sar-item"><dt>행동</dt><dd>웹 위키, 디스코드 봇, 플러그인을 연동해 온보딩 전 과정을 자동화했습니다.</dd></div>
-      <div class="sar-item"><dt>결과</dt><dd>서비스 완성 후 3개월 운영, 약 100명이 이탈 없이 온보딩을 완료했습니다.</dd></div>
-    </dl>
-    <p class="panel-note">디스코드 커뮤니티 초기 세팅 자동화 서비스도 현재 개발 중입니다.</p>
-  </article>
-
-  <article class="panel" id="panel-volante" aria-label="분석하고 만든다">
-    <button class="panel-close" data-close="panel-volante" aria-label="패널 닫기">✕</button>
-    <p class="panel-position">Volante</p>
-    <h2>분석하고, 만든다</h2>
-    <dl class="sar">
-      <div class="sar-item"><dt>상황</dt><dd>반복되는 비효율이나 불편함을 만날 때마다 구조를 분석하게 됩니다.</dd></div>
-      <div class="sar-item"><dt>행동</dt><dd>아이디어를 메모하고 구체화한 뒤 직접 구현을 시도합니다.</dd></div>
-      <div class="sar-item"><dt>결과</dt><dd>책임이 주어진 프로젝트는 반드시 완수합니다. 마인크래프트 서버 자동화가 그 사례입니다.</dd></div>
-    </dl>
-  </article>
-
-  <article class="panel" id="panel-fullback" aria-label="전술을 분석하고 재현한다">
-    <button class="panel-close" data-close="panel-fullback" aria-label="패널 닫기">✕</button>
-    <p class="panel-position">Full-back</p>
-    <h2>전술을 분석하고, 재현한다</h2>
-    <dl class="sar">
-      <div class="sar-item"><dt>상황</dt><dd>경기를 보다가 펩 과르디올라의 오라일리 기용 방식이 궁금해졌습니다.</dd></div>
-      <div class="sar-item"><dt>행동</dt><dd>FM에서 동일 전술을 직접 구현해 작동 방식을 검증했습니다.</dd></div>
-      <div class="sar-item"><dt>결과</dt><dd>역습 시 취약점 확인, 좌측 하프스페이스에서 도쿠-오라일리의 분업이 예상보다 파괴적임을 발견했습니다.</dd></div>
-    </dl>
-    <p class="panel-note">StatsBomb 데이터 기반 전술 움직임 시각화 서비스를 개발 중입니다.</p>
-  </article>
 
   <script src="main.js"></script>
 </body>
