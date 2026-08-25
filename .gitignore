@@ -1,0 +1,10 @@
+# 에디터 / IDE
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# 개발용 메모
+docs/

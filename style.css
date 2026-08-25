@@ -1,0 +1,425 @@
+/* ===== RESET & CUSTOM PROPERTIES ===== */
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+:root {
+  --bg:      #0a0a0a;
+  --text:    #ffffff;
+  --muted:   rgba(255, 255, 255, 0.5);
+  --accent:  #d4ff3f;
+  --line:    rgba(255, 255, 255, 0.1);
+  --surface: rgba(8, 8, 8, 0.88);
+  --panel-w: min(440px, 92vw);
+}
+
+html { scroll-behavior: smooth; }
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Malgun Gothic', sans-serif;
+  line-height: 1.6;
+  overflow-x: hidden;
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px; height: 1px;
+  padding: 0; overflow: hidden;
+  clip: rect(0,0,0,0);
+  white-space: nowrap; border: 0;
+}
+
+/* ===== HERO (450vh — 스크롤 공간 확보) ===== */
+.hero {
+  height: 450vh;
+  position: relative;
+}
+
+.hero-sticky {
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  overflow: hidden;
+}
+
+/* ===== CANVAS ===== */
+#pitch-canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
+  background: #1a3520;
+  image-rendering: pixelated;
+  image-rendering: crisp-edges;
+}
+
+#stadium-img { display: none; }
+
+.canvas-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.35);
+  z-index: 1;
+  pointer-events: none;
+  transition: background 0.5s ease;
+}
+
+.canvas-overlay.tactical-mode {
+  background: rgba(0, 0, 0, 0.62);
+}
+
+/* ===== HERO INTRO ===== */
+.hero-intro {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -55%);
+  text-align: center;
+  z-index: 2;
+  pointer-events: none;
+  transition: opacity 0.4s ease;
+  width: 90%;
+}
+
+.hero-kicker {
+  font-size: clamp(0.7rem, 1.2vw, 0.9rem);
+  font-weight: 700;
+  letter-spacing: 0.4em;
+  color: var(--accent);
+  text-transform: uppercase;
+  margin-bottom: 16px;
+}
+
+.hero-name {
+  font-size: clamp(3.5rem, 12vw, 9rem);
+  font-weight: 800;
+  letter-spacing: -0.04em;
+  line-height: 1;
+  margin-bottom: 20px;
+}
+
+.hero-tagline {
+  font-size: clamp(0.9rem, 2vw, 1.2rem);
+  color: var(--muted);
+  font-weight: 400;
+}
+
+.hero-scroll-hint {
+  margin-top: 40px;
+  font-size: 0.65rem;
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+  color: var(--muted);
+  animation: bounce 2s infinite;
+}
+
+@keyframes bounce {
+  0%, 100% { transform: translateY(0); opacity: 0.5; }
+  50%       { transform: translateY(6px); opacity: 1; }
+}
+
+/* ===== TACTICAL OVERLAY ===== */
+.tactical-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 20px;
+  padding-bottom: 76px;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.5s ease;
+}
+
+.tactical-overlay.visible {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+/* ===== PITCH WRAPPER ===== */
+.pitch-wrapper {
+  position: relative;
+  width: min(88vw, calc(68vh * 105 / 68));
+  aspect-ratio: 105 / 68;
+}
+
+.pitch-svg {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+/* ===== PITCH MARKERS ===== */
+.pitch-markers {
+  position: absolute;
+  inset: 0;
+}
+
+/* 기본 마커 공통 */
+.marker {
+  position: absolute;
+  left: var(--mx);
+  top: var(--my);
+  transform: translate(-50%, -50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  background: none;
+  border: none;
+  font-family: inherit;
+  cursor: default;
+  padding: 8px;
+}
+
+/* 마커 점 */
+.marker-dot {
+  display: block;
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.45);
+}
+
+.marker-label {
+  font-size: 0.52rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  color: rgba(255, 255, 255, 0.35);
+  pointer-events: none;
+}
+
+/* Regista 마커 (본인) */
+.marker-regista .marker-dot {
+  background: var(--accent);
+  box-shadow: 0 0 10px var(--accent);
+  width: 11px;
+  height: 11px;
+}
+
+.marker-regista .marker-label {
+  color: var(--accent);
+  opacity: 0.9;
+}
+
+/* 활성(인터랙티브) 마커 */
+.marker-btn {
+  cursor: pointer;
+}
+
+.marker-btn .marker-dot {
+  width: 13px;
+  height: 13px;
+  background: var(--text);
+  box-shadow: 0 0 0 0 rgba(212, 255, 63, 0);
+  animation: pulse 2.5s infinite;
+}
+
+.marker-btn .marker-label {
+  color: rgba(255, 255, 255, 0.85);
+  font-size: 0.58rem;
+}
+
+@keyframes pulse {
+  0%   { box-shadow: 0 0 0 0 rgba(212, 255, 63, 0.5); }
+  60%  { box-shadow: 0 0 0 6px rgba(212, 255, 63, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(212, 255, 63, 0); }
+}
+
+.marker-btn:hover .marker-dot,
+.marker-btn:focus-visible .marker-dot {
+  background: var(--accent);
+  box-shadow: 0 0 14px var(--accent);
+  animation: none;
+}
+
+.marker-btn:focus-visible { outline: none; }
+
+.marker-btn[aria-expanded="true"] .marker-dot {
+  background: var(--accent);
+  box-shadow: 0 0 18px var(--accent);
+  animation: none;
+  transform: scale(1.25);
+}
+
+.marker-btn[aria-expanded="true"] .marker-label {
+  color: var(--accent);
+}
+
+/* ===== TACTICAL HINT ===== */
+.tactical-hint {
+  font-size: 0.7rem;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+/* ===== HERO STRIP ===== */
+.hero-strip {
+  position: absolute;
+  bottom: 0;
+  left: 0; right: 0;
+  z-index: 3;
+  display: flex;
+  background: var(--surface);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border-top: 1px solid var(--line);
+}
+
+.strip-item {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 14px 18px;
+  border: none;
+  border-right: 1px solid var(--line);
+  background: none;
+  color: inherit;
+  font-family: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+
+.strip-item:last-child { border-right: none; }
+
+.strip-item:hover { background: rgba(255,255,255,0.05); }
+
+.strip-item:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: -2px;
+  background: rgba(255,255,255,0.05);
+}
+
+.strip-label {
+  font-size: 0.6rem;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  color: var(--accent);
+  text-transform: uppercase;
+}
+
+.strip-title {
+  font-size: clamp(0.75rem, 1.4vw, 0.9rem);
+  font-weight: 600;
+  color: var(--text);
+  line-height: 1.3;
+}
+
+/* ===== PANELS ===== */
+.panel {
+  position: fixed;
+  top: 0; right: 0;
+  height: 100vh;
+  width: var(--panel-w);
+  background: rgba(10, 10, 10, 0.96);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border-left: 1px solid var(--line);
+  padding: 52px 32px 40px;
+  overflow-y: auto;
+  z-index: 100;
+  transform: translateX(100%);
+  visibility: hidden;
+  transition: transform 0.35s cubic-bezier(0.4,0,0.2,1),
+              visibility 0.35s;
+}
+
+.panel.open {
+  transform: translateX(0);
+  visibility: visible;
+}
+
+.panel-close {
+  position: absolute;
+  top: 18px; right: 18px;
+  width: 38px; height: 38px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: none;
+  border: 1px solid var(--line);
+  border-radius: 50%;
+  color: var(--muted);
+  font-size: 1rem;
+  cursor: pointer;
+  transition: background 0.2s, color 0.2s, border-color 0.2s;
+}
+
+.panel-close:hover {
+  background: rgba(255,255,255,0.08);
+  color: var(--text);
+  border-color: rgba(255,255,255,0.3);
+}
+
+.panel-close:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.panel-position {
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--accent);
+  margin-bottom: 10px;
+}
+
+.panel h2 {
+  font-size: clamp(1.3rem, 3vw, 1.8rem);
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  line-height: 1.2;
+  margin-bottom: 30px;
+}
+
+.sar { display: grid; gap: 22px; }
+.sar-item { display: grid; gap: 5px; }
+
+.sar dt {
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.sar dd {
+  font-size: 0.95rem;
+  line-height: 1.7;
+  color: var(--text);
+}
+
+.panel-note {
+  margin-top: 26px;
+  padding-top: 22px;
+  border-top: 1px solid var(--line);
+  font-size: 0.85rem;
+  color: var(--muted);
+  line-height: 1.65;
+}
+
+/* ===== REDUCED MOTION ===== */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+
+  html { scroll-behavior: auto; }
+  .hero-intro       { opacity: 0 !important; }
+  .tactical-overlay { opacity: 1 !important; pointer-events: auto !important; }
+  .canvas-overlay   { background: rgba(0,0,0,0.62) !important; }
+}
