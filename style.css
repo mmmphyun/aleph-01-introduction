@@ -12,7 +12,7 @@
   --accent:      #d4ff3f;
   --line:        rgba(255, 255, 255, 0.14);
   --surface:     rgba(10, 14, 16, 0.88);
-  --glass-bg:    rgba(14, 18, 24, 0.76);
+  --glass-bg:    rgba(14, 18, 24, 0.78);
   --glass-border:rgba(212, 255, 63, 0.22);
 }
 
@@ -50,7 +50,7 @@ body {
   overflow: hidden;
 }
 
-/* ===== LOCKER ROOM BACKGROUND (픽셀 아트 셰이딩 연출) ===== */
+/* ===== LOCKER ROOM BACKGROUND (픽셀 아트 셰이딩) ===== */
 .locker-room-bg {
   position: absolute;
   inset: 0;
@@ -70,13 +70,12 @@ body {
   opacity: 1;
 }
 
-/* 픽셀 CRT 스캔라인 그리드 */
 .pixel-crt-grid {
   position: absolute;
   inset: 0;
   background: linear-gradient(
     rgba(18, 16, 16, 0) 50%, 
-    rgba(0, 0, 0, 0.25) 50%
+    rgba(0, 0, 0, 0.3) 50%
   ), linear-gradient(
     90deg,
     rgba(255, 0, 0, 0.03),
@@ -188,14 +187,15 @@ body {
   width: min(38vw, 420px);
   height: min(65vh, 650px);
   transform: rotateX(24deg) translateY(-12px);
-  border-radius: 12px;
-  border: 2px solid rgba(212, 255, 63, 0.3);
+  border-radius: 6px;
+  border: 3px solid #1c261e;
+  outline: 1px solid rgba(212, 255, 63, 0.25);
   box-shadow: 
-    0 25px 50px -10px rgba(0, 0, 0, 0.9),
-    0 0 24px rgba(212, 255, 63, 0.15);
+    0 25px 50px -10px rgba(0, 0, 0, 0.95),
+    0 0 20px rgba(0, 0, 0, 0.6);
 }
 
-/* 캔버스 및 픽셀 셰이딩 */
+/* 캔버스 */
 #pitch-canvas {
   position: absolute;
   inset: 0;
@@ -209,17 +209,7 @@ body {
 
 #stadium-img { display: none; }
 
-.board-pixel-overlay {
-  position: absolute;
-  inset: 0;
-  background: 
-    linear-gradient(rgba(0,0,0,0.2) 50%, rgba(0,0,0,0.4) 50%),
-    radial-gradient(circle at center, transparent 40%, rgba(0,0,0,0.7) 100%);
-  background-size: 100% 4px, 100% 100%;
-  pointer-events: none;
-  opacity: 0.7;
-}
-
+/* SVG 피치 라인 (블렌딩 & 도트 질감) */
 .pitch-svg {
   position: absolute;
   inset: 0;
@@ -229,20 +219,22 @@ body {
   opacity: 0;
   transition: opacity 0.5s ease;
   pointer-events: none;
-  filter: drop-shadow(0 0 2px rgba(212, 255, 63, 0.4));
+  mix-blend-mode: overlay;
+  filter: drop-shadow(0 0 1px rgba(255, 255, 255, 0.3));
 }
 
 .stage-active .pitch-svg {
-  opacity: 1;
+  opacity: 0.85;
 }
 
-/* ===== 마커 스타일 ===== */
+/* ===== 도트 자석 마커 스타일 ===== */
 .pitch-markers {
   position: absolute;
   inset: 0;
   opacity: 0;
   transition: opacity 0.5s ease;
   pointer-events: none;
+  z-index: 3;
 }
 
 .stage-active .pitch-markers {
@@ -258,42 +250,50 @@ body {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 3px;
+  gap: 2px;
   background: none;
   border: none;
-  font-family: inherit;
+  font-family: monospace, sans-serif;
   cursor: default;
-  padding: 6px;
+  padding: 4px;
 }
 
+/* 각진 픽셀 자석 도트 */
 .marker-dot {
   display: block;
   width: 8px;
   height: 8px;
-  border-radius: 50%;
-  background: rgba(255, 255, 255, 0.5);
-  box-shadow: 0 0 4px rgba(255, 255, 255, 0.4);
+  border-radius: 1px; /* 픽셀 사각 */
+  background: #d8e2dc;
+  border: 1.5px solid #000000;
+  box-shadow: 1px 1px 0px #000000;
+  image-rendering: pixelated;
 }
 
 .marker-label {
-  font-size: 0.52rem;
-  font-weight: 700;
-  letter-spacing: 0.08em;
-  color: rgba(255, 255, 255, 0.4);
+  font-size: 0.5rem;
+  font-weight: 800;
+  letter-spacing: 0.05em;
+  color: #ffffff;
+  text-shadow: 
+    -1px -1px 0 #000,  
+     1px -1px 0 #000,
+    -1px  1px 0 #000,
+     1px  1px 0 #000;
   pointer-events: none;
 }
 
 /* Regista 마커 (6번 딥라잉 피벗) */
 .marker-regista .marker-dot {
   background: var(--accent);
-  box-shadow: 0 0 12px var(--accent);
-  width: 11px;
-  height: 11px;
+  border: 1.5px solid #000000;
+  box-shadow: 0 0 8px var(--accent), 1px 1px 0px #000000;
+  width: 10px;
+  height: 10px;
 }
 
 .marker-regista .marker-label {
   color: var(--accent);
-  opacity: 1;
 }
 
 /* 활성 인터랙티브 마커 버튼 */
@@ -302,28 +302,28 @@ body {
 }
 
 .marker-btn .marker-dot {
-  width: 12px;
-  height: 12px;
+  width: 11px;
+  height: 11px;
   background: #ffffff;
-  box-shadow: 0 0 0 0 rgba(212, 255, 63, 0);
-  animation: markerPulse 2.4s infinite;
+  border: 2px solid #000000;
+  box-shadow: 1.5px 1.5px 0px #000000;
+  animation: pixelPulse 2s steps(2, start) infinite;
 }
 
 .marker-btn .marker-label {
-  color: rgba(255, 255, 255, 0.9);
-  font-size: 0.56rem;
+  color: #ffffff;
+  font-size: 0.55rem;
 }
 
-@keyframes markerPulse {
-  0%   { box-shadow: 0 0 0 0 rgba(212, 255, 63, 0.7); }
-  60%  { box-shadow: 0 0 0 8px rgba(212, 255, 63, 0); }
-  100% { box-shadow: 0 0 0 0 rgba(212, 255, 63, 0); }
+@keyframes pixelPulse {
+  0%, 100% { transform: scale(1); }
+  50%      { transform: scale(1.2); }
 }
 
 .marker-btn:hover .marker-dot,
 .marker-btn:focus-visible .marker-dot {
   background: var(--accent);
-  box-shadow: 0 0 16px var(--accent);
+  box-shadow: 0 0 10px var(--accent), 1.5px 1.5px 0px #000000;
   transform: scale(1.25);
   animation: none;
 }
@@ -332,13 +332,25 @@ body {
 
 .marker-btn[aria-expanded="true"] .marker-dot {
   background: var(--accent);
-  box-shadow: 0 0 18px var(--accent);
+  box-shadow: 0 0 14px var(--accent), 1.5px 1.5px 0px #000000;
   animation: none;
   transform: scale(1.3);
 }
 
 .marker-btn[aria-expanded="true"] .marker-label {
   color: var(--accent);
+}
+
+/* 전체 보드 통합 픽셀 오버레이 (캔버스+라인+마커를 덮어 일체화) */
+.board-pixel-overlay {
+  position: absolute;
+  inset: 0;
+  background: 
+    linear-gradient(rgba(0,0,0,0) 50%, rgba(0,0,0,0.35) 50%),
+    radial-gradient(circle at center, transparent 45%, rgba(0,0,0,0.7) 100%);
+  background-size: 100% 3px, 100% 100%;
+  pointer-events: none;
+  z-index: 4;
 }
 
 /* ===== [우측] 글래스모피즘 상세 설명 영역 ===== */
