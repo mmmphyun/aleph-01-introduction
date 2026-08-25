@@ -37,25 +37,25 @@
             <canvas id="pitch-canvas" aria-hidden="true"></canvas>
             <img id="stadium-img" src="assets/stadium.jpg" alt="">
 
-            <!-- 세로 피치 라인 SVG (도트 픽셀 질감 블렌딩) -->
+            <!-- 세로 피치 라인 SVG (선명한 실선 그리드) -->
             <svg class="pitch-svg" viewBox="0 0 68 105" aria-hidden="true" focusable="false">
               <!-- 외곽선 -->
-              <rect x="0.5" y="0.5" width="67" height="104" fill="none" stroke="white" stroke-width="0.85" stroke-dasharray="2, 1" opacity="0.65"/>
+              <rect x="0.5" y="0.5" width="67" height="104" fill="none" stroke="white" stroke-width="0.8" opacity="0.8"/>
               <!-- 하프라인 -->
-              <line x1="0.5" y1="52.5" x2="67.5" y2="52.5" stroke="white" stroke-width="0.85" stroke-dasharray="2, 1" opacity="0.65"/>
+              <line x1="0.5" y1="52.5" x2="67.5" y2="52.5" stroke="white" stroke-width="0.8" opacity="0.8"/>
               <!-- 센터 서클 & 스팟 -->
-              <circle cx="34" cy="52.5" r="9.15" fill="none" stroke="white" stroke-width="0.85" stroke-dasharray="2, 1" opacity="0.65"/>
-              <rect x="33.4" y="51.9" width="1.2" height="1.2" fill="white" opacity="0.75"/>
+              <circle cx="34" cy="52.5" r="9.15" fill="none" stroke="white" stroke-width="0.8" opacity="0.8"/>
+              <circle cx="34" cy="52.5" r="0.75" fill="white" opacity="0.9"/>
               
               <!-- 상단 페널티 박스 (상대 진영) -->
-              <rect x="13.84" y="0.5" width="40.32" height="16.5" fill="none" stroke="white" stroke-width="0.85" stroke-dasharray="2, 1" opacity="0.65"/>
-              <rect x="24.84" y="0.5" width="18.32" height="5.5" fill="none" stroke="white" stroke-width="0.85" stroke-dasharray="2, 1" opacity="0.65"/>
-              <rect x="33.4" y="10.4" width="1.2" height="1.2" fill="white" opacity="0.75"/>
+              <rect x="13.84" y="0.5" width="40.32" height="16.5" fill="none" stroke="white" stroke-width="0.8" opacity="0.8"/>
+              <rect x="24.84" y="0.5" width="18.32" height="5.5" fill="none" stroke="white" stroke-width="0.8" opacity="0.8"/>
+              <circle cx="34" cy="11" r="0.75" fill="white" opacity="0.9"/>
 
               <!-- 하단 페널티 박스 (아군 진영) -->
-              <rect x="13.84" y="88" width="40.32" height="16.5" fill="none" stroke="white" stroke-width="0.85" stroke-dasharray="2, 1" opacity="0.65"/>
-              <rect x="24.84" y="99" width="18.32" height="5.5" fill="none" stroke="white" stroke-width="0.85" stroke-dasharray="2, 1" opacity="0.65"/>
-              <rect x="33.4" y="93.4" width="1.2" height="1.2" fill="white" opacity="0.75"/>
+              <rect x="13.84" y="88" width="40.32" height="16.5" fill="none" stroke="white" stroke-width="0.8" opacity="0.8"/>
+              <rect x="24.84" y="99" width="18.32" height="5.5" fill="none" stroke="white" stroke-width="0.8" opacity="0.8"/>
+              <circle cx="34" cy="94" r="0.75" fill="white" opacity="0.9"/>
             </svg>
 
             <!-- 11명 선수 마커 (세로 피치 좌표계: left%, top%) -->
