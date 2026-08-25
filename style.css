@@ -351,7 +351,7 @@ body {
   z-index: 2;
 }
 
-/* ===== [우측] 글래스모피즘 상세 설명 영역 ===== */
+/* ===== [우측] 리얼 글래스모피즘 상세 설명 영역 ===== */
 .content-display-area {
   flex: 1;
   max-width: 520px;
@@ -377,13 +377,24 @@ body {
   display: flex;
   flex-direction: column;
   justify-content: center;
-  padding: 32px 36px;
-  background: var(--glass-bg);
-  backdrop-filter: blur(24px);
-  -webkit-backdrop-filter: blur(24px);
-  border: 1px solid var(--glass-border);
-  border-radius: 16px;
-  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5);
+  padding: 34px 38px;
+  /* 반투명 유리 셰이딩 + 상단 빛 반사 하이라이트 */
+  background: linear-gradient(
+    135deg, 
+    rgba(255, 255, 255, 0.12) 0%, 
+    rgba(14, 18, 24, 0.45) 40%, 
+    rgba(8, 12, 16, 0.65) 100%
+  );
+  backdrop-filter: blur(14px) saturate(180%);
+  -webkit-backdrop-filter: blur(14px) saturate(180%);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-top: 1px solid rgba(255, 255, 255, 0.38); /* 상단 에지 라이트 */
+  border-left: 1px solid rgba(255, 255, 255, 0.28);
+  border-radius: 18px;
+  box-shadow: 
+    0 24px 48px -12px rgba(0, 0, 0, 0.7),
+    0 0 0 1px rgba(0, 0, 0, 0.3),
+    inset 0 1px 1px 0 rgba(255, 255, 255, 0.25); /* 내부 빛 굴절 */
   opacity: 0;
   visibility: hidden;
   transform: translateY(15px);
