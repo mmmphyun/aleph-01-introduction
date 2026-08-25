@@ -234,7 +234,7 @@ body {
   opacity: 0;
   transition: opacity 0.5s ease;
   pointer-events: none;
-  z-index: 3;
+  z-index: 5; /* 텍스트 가독성을 위해 오버레이 위로 올림 */
 }
 
 .stage-active .pitch-markers {
@@ -253,7 +253,6 @@ body {
   gap: 2px;
   background: none;
   border: none;
-  font-family: monospace, sans-serif;
   cursor: default;
   padding: 4px;
 }
@@ -263,27 +262,29 @@ body {
   display: block;
   width: 8px;
   height: 8px;
-  border-radius: 1px; /* 픽셀 사각 */
-  background: #d8e2dc;
+  border-radius: 1px;
+  background: #c8d6cf;
   border: 1.5px solid #000000;
   box-shadow: 1px 1px 0px #000000;
-  image-rendering: pixelated;
 }
 
+/* 선명하고 또렷한 모던 폰트 라벨 */
 .marker-label {
-  font-size: 0.5rem;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  font-size: 0.62rem;
   font-weight: 800;
-  letter-spacing: 0.05em;
+  letter-spacing: 0.04em;
   color: #ffffff;
-  text-shadow: 
-    -1px -1px 0 #000,  
-     1px -1px 0 #000,
-    -1px  1px 0 #000,
-     1px  1px 0 #000;
+  background: rgba(0, 0, 0, 0.75);
+  padding: 1px 4px;
+  border-radius: 3px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.8);
   pointer-events: none;
+  margin-top: 2px;
 }
 
-/* Regista 마커 (6번 딥라잉 피벗) */
+/* Regista 마커 */
 .marker-regista .marker-dot {
   background: var(--accent);
   border: 1.5px solid #000000;
@@ -294,6 +295,7 @@ body {
 
 .marker-regista .marker-label {
   color: var(--accent);
+  border-color: rgba(212, 255, 63, 0.4);
 }
 
 /* 활성 인터랙티브 마커 버튼 */
@@ -308,11 +310,6 @@ body {
   border: 2px solid #000000;
   box-shadow: 1.5px 1.5px 0px #000000;
   animation: pixelPulse 2s steps(2, start) infinite;
-}
-
-.marker-btn .marker-label {
-  color: #ffffff;
-  font-size: 0.55rem;
 }
 
 @keyframes pixelPulse {
@@ -339,18 +336,19 @@ body {
 
 .marker-btn[aria-expanded="true"] .marker-label {
   color: var(--accent);
+  border-color: var(--accent);
 }
 
-/* 전체 보드 통합 픽셀 오버레이 (캔버스+라인+마커를 덮어 일체화) */
+/* 캔버스/피치 배경 오버레이 */
 .board-pixel-overlay {
   position: absolute;
   inset: 0;
   background: 
-    linear-gradient(rgba(0,0,0,0) 50%, rgba(0,0,0,0.35) 50%),
+    linear-gradient(rgba(0,0,0,0) 50%, rgba(0,0,0,0.3) 50%),
     radial-gradient(circle at center, transparent 45%, rgba(0,0,0,0.7) 100%);
   background-size: 100% 3px, 100% 100%;
   pointer-events: none;
-  z-index: 4;
+  z-index: 2;
 }
 
 /* ===== [우측] 글래스모피즘 상세 설명 영역 ===== */
