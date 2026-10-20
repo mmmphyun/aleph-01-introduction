@@ -3,7 +3,7 @@
 > **과제명**: T08 · 내 소개 페이지에 패스키 달기 — 비밀번호 없이 나만 들어가기  
 > **제출자**: 한승윤 (Regista)  
 > **소스 저장소 URL**: [https://github.com/mmmphyun/aleph-01-introduction](https://github.com/mmmphyun/aleph-01-introduction)  
-> **결과물 배포 URL**: [https://aleph-01-introduction.vercel.app](https://aleph-01-introduction.vercel.app) (또는 `http://localhost:3000`)  
+> **결과물 배포 URL**: [https://aleph-01-introduction.vercel.app](https://aleph-01-introduction.vercel.app)  
 > ※ 본 과제의 모든 비공개 데이터는 테스트용 가상 데이터이며, 실제 개인 식별 정보(주민등록번호, 전화번호, 실주소 등)는 일체 포함되어 있지 않습니다.
 
 ---

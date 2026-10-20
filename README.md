@@ -3,7 +3,7 @@
 > **SKT ALEPH Bootcamp — Vibe Coding Challenge (T01)**  
 > 관심 있는 대상을 분석하고, 직접 프로덕트로 설계·구현하는 사람 한승윤의 소개 페이지입니다.
 
-- **Live Demo**: [https://mmmphyun.github.io/aleph-01-introduction/](https://mmmphyun.github.io/aleph-01-introduction/)
+- **Live Demo**: [https://aleph-01-introduction.vercel.app](https://aleph-01-introduction.vercel.app)
 
 ---
 
@@ -35,7 +35,7 @@ AI를 단순 코드 자동완성 도구가 아닌 페어 프로그래머로 활�
 
 - **Core**: Vanilla HTML5, CSS3, JavaScript (ES6+)
 - **Graphics**: HTML5 Canvas, SVG Pitch Vector Overlay
-- **Deploy**: GitHub Pages, Vercel (WebAuthn Full-Stack)
+- **Deploy**: Vercel (WebAuthn Full-Stack)
 
 ---
 
