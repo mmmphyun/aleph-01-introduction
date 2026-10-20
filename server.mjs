@@ -81,6 +81,11 @@ app.use(express.json());
 // ponytail: static serving node_modules browser bundle for zero-bundler setup
 app.use('/vendor/simplewebauthn-browser', express.static(path.join(__dirname, 'node_modules/@simplewebauthn/browser/dist/bundle')));
 app.use(express.static(__dirname));
+app.use(express.static(process.cwd()));
+
+app.get('/', (req, res) => {
+  res.sendFile(path.join(process.cwd(), 'index.html'));
+});
 
 // ponytail: hardcoded session secret for demo. Use process.env.SESSION_SECRET in production.
 app.use(session({
