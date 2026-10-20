@@ -426,6 +426,15 @@ stripItems.forEach(btn => {
     feedbackEl.className = 'vault-feedback ' + type;
   }
 
+  // HTML 응답 파싱 에러 방지 헬퍼
+  async function parseJsonResponse(res) {
+    const contentType = res.headers.get('content-type') || '';
+    if (!contentType.includes('application/json')) {
+      throw new Error('백엔드 API 서버(server.mjs)에 연결할 수 없습니다. 터미널에서 "npm start"를 실행한 후 http://localhost:3000 으로 접속해 주세요.');
+    }
+    return await res.json();
+  }
+
   function setVaultLocked(isLocked) {
     if (isLocked) {
       badgeEl.textContent = 'LOCKED · 잠김';
@@ -449,7 +458,7 @@ stripItems.forEach(btn => {
     try {
       const res = await fetch('/api/auth/credentials');
       if (!res.ok) return;
-      const creds = await res.json();
+      const creds = await parseJsonResponse(res);
       if (!creds || creds.length === 0) {
         keysList.innerHTML = '<p class="keys-policy-note" style="color: #fca5a5;">등록된 패스키가 없습니다. 새 패스키를 등록해야 다시 로그인할 수 있습니다.</p>';
         return;
@@ -470,13 +479,13 @@ stripItems.forEach(btn => {
           if (!confirm('이 패스키를 삭제하시겠습니까?')) return;
           try {
             const delRes = await fetch(`/api/auth/credentials/${credId}`, { method: 'DELETE' });
-            const data = await delRes.json();
+            const data = await parseJsonResponse(delRes);
             if (data.deleted) {
               setFeedback('패스키가 삭제되었습니다. 잔여 키: ' + data.remainingCount + '개', 'info');
               loadCredentials();
             }
           } catch (err) {
-            setFeedback('패스키 삭제 중 오류가 발생했습니다.', 'error');
+            setFeedback('패스키 삭제 중 오류가 발생했습니다: ' + err.message, 'error');
           }
         });
       });
@@ -495,7 +504,7 @@ stripItems.forEach(btn => {
       if (!res.ok) {
         throw new Error('비공개 데이터를 불러오지 못했습니다.');
       }
-      const data = await res.json();
+      const data = await parseJsonResponse(res);
       setVaultLocked(false);
       welcomeText.textContent = `인증 사용자: ${data.ownerName} (${data.owner})`;
 
@@ -543,11 +552,10 @@ stripItems.forEach(btn => {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ username, deviceName })
       });
+      const options = await parseJsonResponse(optRes);
       if (!optRes.ok) {
-        const errData = await optRes.json();
-        throw new Error(errData.error || '등록 옵션 발급 실패');
+        throw new Error(options.error || '등록 옵션 발급 실패');
       }
-      const options = await optRes.json();
 
       setFeedback('기기 생체인증/보안키 대화상자를 확인해 주세요...', 'info');
 
@@ -569,7 +577,7 @@ stripItems.forEach(btn => {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(attResp)
       });
-      const verifyData = await verifyRes.json();
+      const verifyData = await parseJsonResponse(verifyRes);
 
       if (!verifyRes.ok || !verifyData.verified) {
         throw new Error(verifyData.error || '공개키 검증에 실패했습니다.');
@@ -597,11 +605,10 @@ stripItems.forEach(btn => {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ username })
       });
+      const options = await parseJsonResponse(optRes);
       if (!optRes.ok) {
-        const errData = await optRes.json();
-        throw new Error(errData.error || '로그인 옵션 요청 실패');
+        throw new Error(options.error || '로그인 옵션 요청 실패');
       }
-      const options = await optRes.json();
 
       setFeedback('기기 패스키 서명을 요청하는 중입니다...', 'info');
 
@@ -622,7 +629,7 @@ stripItems.forEach(btn => {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(assertResp)
       });
-      const verifyData = await verifyRes.json();
+      const verifyData = await parseJsonResponse(verifyRes);
 
       if (!verifyRes.ok || !verifyData.verified) {
         throw new Error(verifyData.error || '서명 검증 실패: 패스키 인증에 실패했습니다.');
@@ -648,7 +655,11 @@ stripItems.forEach(btn => {
 
   // 초기 로딩 시 세션 상태 확인
   fetch('/api/auth/session')
-    .then(res => res.json())
+    .then(res => {
+      const ct = res.headers.get('content-type') || '';
+      if (!ct.includes('application/json')) return null;
+      return res.json();
+    })
     .then(data => {
       if (data && data.authenticated) {
         userSelect.value = data.user.username;
