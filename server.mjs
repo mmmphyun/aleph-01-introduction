@@ -1,7 +1,7 @@
 import express from 'express';
-import session from 'express-session';
 import path from 'path';
 import fs from 'fs';
+import crypto from 'crypto';
 import { fileURLToPath } from 'url';
 import {
   generateRegistrationOptions,
@@ -16,7 +16,47 @@ const __dirname = path.dirname(__filename);
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// ponytail: in-memory user store. Replace with persistent DB when server restart survival is needed.
+// Vercel 및 리버스 프록시 환경 필수 설정
+app.set('trust proxy', 1);
+
+const CHALLENGE_SECRET = process.env.SESSION_SECRET || 'regista-passkey-secret-key-2026';
+
+// ponytail: 5-line standard cookie parser without external dependencies
+function getCookies(req) {
+  const list = {};
+  const rc = req.headers.cookie;
+  if (rc) {
+    rc.split(';').forEach(cookie => {
+      const parts = cookie.split('=');
+      list[parts.shift().trim()] = decodeURI(parts.join('='));
+    });
+  }
+  return list;
+}
+
+// HMAC-SHA256 서명 기반 무상태 챌린지 및 세션 토큰 헬퍼 (서버리스 인스턴스 불일치 해결)
+function createSignedToken(data) {
+  const payload = Buffer.from(JSON.stringify(data)).toString('base64url');
+  const sig = crypto.createHmac('sha256', CHALLENGE_SECRET).update(payload).digest('base64url');
+  return `${payload}.${sig}`;
+}
+
+function verifySignedToken(token) {
+  if (!token || typeof token !== 'string') return null;
+  const [payload, sig] = token.split('.');
+  if (!payload || !sig) return null;
+  const expectedSig = crypto.createHmac('sha256', CHALLENGE_SECRET).update(payload).digest('base64url');
+  if (sig !== expectedSig) return null;
+  try {
+    const data = JSON.parse(Buffer.from(payload, 'base64url').toString('utf8'));
+    if (data.exp && Date.now() > data.exp) return null;
+    return data;
+  } catch {
+    return null;
+  }
+}
+
+// 사용자 및 비공개 데이터 저장소
 const USERS_DB = {
   regista_master: {
     id: 'usr_regista_master',
@@ -78,41 +118,29 @@ const USERS_DB = {
   }
 };
 
+// 파일 기반 영속성 동기화 (/tmp 또는 로컬)
+const DB_FILE = path.join(process.platform === 'win32' ? process.cwd() : '/tmp', 'regista_users_db.json');
+function saveUsersDb() {
+  try { fs.writeFileSync(DB_FILE, JSON.stringify(USERS_DB, null, 2)); } catch {}
+}
+function loadUsersDb() {
+  try {
+    if (fs.existsSync(DB_FILE)) {
+      const data = JSON.parse(fs.readFileSync(DB_FILE, 'utf8'));
+      for (const [k, v] of Object.entries(data)) {
+        if (USERS_DB[k]) USERS_DB[k].credentials = v.credentials || [];
+      }
+    }
+  } catch {}
+}
+loadUsersDb();
+
 app.use(express.json());
-// ponytail: static serving node_modules browser bundle for zero-bundler setup
-app.use('/vendor/simplewebauthn-browser', express.static(path.join(__dirname, 'node_modules/@simplewebauthn/browser/dist/bundle')));
 app.use(express.static(path.join(__dirname, 'public')));
 app.use(express.static(__dirname));
 app.use(express.static(process.cwd()));
 
-app.get('/', (req, res) => {
-  const indexPath = [
-    path.join(__dirname, 'public', 'index.html'),
-    path.join(__dirname, 'index.html'),
-    path.join(process.cwd(), 'index.html')
-  ].find(p => fs.existsSync(p));
-  if (indexPath) {
-    res.sendFile(indexPath);
-  } else {
-    res.status(404).send('index.html not found');
-  }
-});
-
-// ponytail: hardcoded session secret for demo. Use process.env.SESSION_SECRET in production.
-app.use(session({
-  name: 'connect.sid',
-  secret: 'regista-passkey-session-secret-key-2026',
-  resave: false,
-  saveUninitialized: false,
-  cookie: {
-    httpOnly: true,
-    secure: process.env.NODE_ENV === 'production',
-    sameSite: 'lax',
-    maxAge: 1000 * 60 * 60 * 2 // 2시간
-  }
-}));
-
-// RP (Relying Party) 메타데이터 헬퍼
+// RP 메타데이터 헬퍼
 function getRPConfig(req) {
   const host = req.get('host') || 'localhost:3000';
   const hostname = host.split(':')[0];
@@ -122,6 +150,15 @@ function getRPConfig(req) {
     rpID: hostname,
     origin: `${protocol}://${host}`
   };
+}
+
+// 세션 사용자 확인 미들웨어
+function getSessionUserId(req) {
+  const cookies = getCookies(req);
+  const token = cookies['auth_session'];
+  if (!token) return null;
+  const verified = verifySignedToken(token);
+  return verified ? verified.userId : null;
 }
 
 // 1. 등록 옵션 생성 (일회용 챌린지 발급)
@@ -149,20 +186,38 @@ app.post('/api/auth/register-options', async (req, res) => {
     }
   });
 
-  // 챌린지 및 등록 컨텍스트를 세션에 보관
-  req.session.currentChallenge = options.challenge;
-  req.session.regUsername = username;
-  req.session.regDeviceName = deviceName || '등록 기기';
+  // 서버리스 환경 대비 서명 토큰 생성 (쿠키 + JSON 동시 제공)
+  const challengeToken = createSignedToken({
+    challenge: options.challenge,
+    regUsername: username,
+    regDeviceName: deviceName || '등록 기기',
+    exp: Date.now() + 1000 * 60 * 5 // 5분 TTL
+  });
 
-  res.json(options);
+  res.cookie('reg_challenge_token', challengeToken, {
+    httpOnly: true,
+    secure: req.protocol === 'https' || req.get('x-forwarded-proto') === 'https',
+    sameSite: 'lax',
+    path: '/'
+  });
+
+  res.json({
+    ...options,
+    challengeToken // 클라이언트 fallback용
+  });
 });
 
 // 2. 등록 응답 검증 및 공개키 저장
 app.post('/api/auth/register-verify', async (req, res) => {
-  const { regUsername, regDeviceName, currentChallenge } = req.session;
-  if (!currentChallenge || !regUsername) {
+  const cookies = getCookies(req);
+  const token = req.body.challengeToken || cookies['reg_challenge_token'];
+  const tokenData = verifySignedToken(token);
+
+  if (!tokenData || !tokenData.challenge || !tokenData.regUsername) {
     return res.status(400).json({ error: '등록 챌린지가 없거나 만료되었습니다.' });
   }
+
+  const { challenge: currentChallenge, regUsername, regDeviceName } = tokenData;
 
   const user = USERS_DB[regUsername];
   if (!user) return res.status(404).json({ error: '사용자를 찾을 수 없습니다.' });
@@ -171,15 +226,12 @@ app.post('/api/auth/register-verify', async (req, res) => {
 
   try {
     const verification = await verifyRegistrationResponse({
-      response: req.body,
+      response: req.body.attestationResponse || req.body,
       expectedChallenge: currentChallenge,
       expectedOrigin: origin,
       expectedRPID: rpID,
       requireUserVerification: false
     });
-
-    // 챌린지 즉시 파기 (일회용 보장)
-    req.session.currentChallenge = null;
 
     if (!verification.verified || !verification.registrationInfo) {
       return res.status(400).json({ error: '등록 검증 실패' });
@@ -196,10 +248,26 @@ app.post('/api/auth/register-verify', async (req, res) => {
     };
 
     user.credentials.push(newCredential);
-    req.session.userId = user.username;
+    saveUsersDb();
+
+    // 일회용 토큰 즉시 소멸
+    res.clearCookie('reg_challenge_token', { path: '/' });
+
+    // 로그인 세션 토큰 발급
+    const sessionToken = createSignedToken({
+      userId: user.username,
+      exp: Date.now() + 1000 * 60 * 60 * 2 // 2시간
+    });
+    res.cookie('auth_session', sessionToken, {
+      httpOnly: true,
+      secure: req.protocol === 'https' || req.get('x-forwarded-proto') === 'https',
+      sameSite: 'lax',
+      path: '/'
+    });
 
     res.json({
       verified: true,
+      sessionToken,
       credential: {
         id: newCredential.id,
         deviceName: newCredential.deviceName,
@@ -207,7 +275,7 @@ app.post('/api/auth/register-verify', async (req, res) => {
       }
     });
   } catch (err) {
-    req.session.currentChallenge = null;
+    res.clearCookie('reg_challenge_token', { path: '/' });
     res.status(400).json({ error: err.message });
   }
 });
@@ -232,29 +300,44 @@ app.post('/api/auth/login-options', async (req, res) => {
     userVerification: 'preferred'
   });
 
-  req.session.currentChallenge = options.challenge;
-  req.session.loginUsername = username;
+  const challengeToken = createSignedToken({
+    challenge: options.challenge,
+    loginUsername: username,
+    exp: Date.now() + 1000 * 60 * 5 // 5분
+  });
 
-  res.json(options);
+  res.cookie('login_challenge_token', challengeToken, {
+    httpOnly: true,
+    secure: req.protocol === 'https' || req.get('x-forwarded-proto') === 'https',
+    sameSite: 'lax',
+    path: '/'
+  });
+
+  res.json({
+    ...options,
+    challengeToken
+  });
 });
 
 // 4. 로그인 응답 검증 및 서명 확인
 app.post('/api/auth/login-verify', async (req, res) => {
-  const { loginUsername, currentChallenge } = req.session;
+  const cookies = getCookies(req);
+  const token = req.body.challengeToken || cookies['login_challenge_token'];
+  const tokenData = verifySignedToken(token);
 
-  // 기사용/미존재 챌린지 거절 (T08-C31)
-  if (!currentChallenge || !loginUsername) {
+  if (!tokenData || !tokenData.challenge || !tokenData.loginUsername) {
     return res.status(400).json({ error: '로그인 챌린지가 없거나 이미 사용되었습니다.' });
   }
 
-  const expectedChallenge = currentChallenge;
-  // 서명 검증 전 즉시 챌린지 소모
-  req.session.currentChallenge = null;
+  const { challenge: expectedChallenge, loginUsername } = tokenData;
+
+  // 일회용 챌린지 즉시 파기 (Replay Attack 차단)
+  res.clearCookie('login_challenge_token', { path: '/' });
 
   const user = USERS_DB[loginUsername];
   if (!user) return res.status(404).json({ error: '사용자를 찾을 수 없습니다.' });
 
-  const body = req.body;
+  const body = req.body.assertionResponse || req.body;
   const cred = user.credentials.find(c => c.id === body.id);
   if (!cred) {
     return res.status(401).json({ error: '등록되지 않았거나 이미 삭제된 패스키입니다.' });
@@ -282,10 +365,23 @@ app.post('/api/auth/login-verify', async (req, res) => {
     }
 
     cred.counter = verification.authenticationInfo.newCounter;
-    req.session.userId = user.username;
+    saveUsersDb();
+
+    // 로그인 세션 토큰 발급
+    const sessionToken = createSignedToken({
+      userId: user.username,
+      exp: Date.now() + 1000 * 60 * 60 * 2
+    });
+    res.cookie('auth_session', sessionToken, {
+      httpOnly: true,
+      secure: req.protocol === 'https' || req.get('x-forwarded-proto') === 'https',
+      sameSite: 'lax',
+      path: '/'
+    });
 
     res.json({
       verified: true,
+      sessionToken,
       user: {
         username: user.username,
         displayName: user.displayName
@@ -298,13 +394,10 @@ app.post('/api/auth/login-verify', async (req, res) => {
 
 // 5. 현재 세션 상태 확인
 app.get('/api/auth/session', (req, res) => {
-  if (!req.session.userId) {
-    return res.json({ authenticated: false });
-  }
-  const user = USERS_DB[req.session.userId];
-  if (!user) {
-    return res.json({ authenticated: false });
-  }
+  const userId = getSessionUserId(req);
+  if (!userId) return res.json({ authenticated: false });
+  const user = USERS_DB[userId];
+  if (!user) return res.json({ authenticated: false });
   res.json({
     authenticated: true,
     user: {
@@ -316,8 +409,9 @@ app.get('/api/auth/session', (req, res) => {
 
 // 6. 패스키 목록 조회
 app.get('/api/auth/credentials', (req, res) => {
-  if (!req.session.userId) return res.status(401).json({ error: '인증이 필요합니다.' });
-  const user = USERS_DB[req.session.userId];
+  const userId = getSessionUserId(req);
+  if (!userId) return res.status(401).json({ error: '인증이 필요합니다.' });
+  const user = USERS_DB[userId];
   if (!user) return res.status(404).json({ error: '사용자를 찾을 수 없습니다.' });
 
   res.json(user.credentials.map(c => ({
@@ -329,12 +423,14 @@ app.get('/api/auth/credentials', (req, res) => {
 
 // 7. 패스키 단건 삭제
 app.delete('/api/auth/credentials/:credId', (req, res) => {
-  if (!req.session.userId) return res.status(401).json({ error: '인증이 필요합니다.' });
-  const user = USERS_DB[req.session.userId];
+  const userId = getSessionUserId(req);
+  if (!userId) return res.status(401).json({ error: '인증이 필요합니다.' });
+  const user = USERS_DB[userId];
   if (!user) return res.status(404).json({ error: '사용자를 찾을 수 없습니다.' });
 
   const initialCount = user.credentials.length;
   user.credentials = user.credentials.filter(c => c.id !== req.params.credId);
+  saveUsersDb();
 
   res.json({
     deleted: user.credentials.length < initialCount,
@@ -344,19 +440,19 @@ app.delete('/api/auth/credentials/:credId', (req, res) => {
 
 // 8. 로그아웃
 app.post('/api/auth/logout', (req, res) => {
-  req.session.destroy(err => {
-    if (err) return res.status(500).json({ error: '로그아웃 실패' });
-    res.clearCookie('connect.sid');
-    res.json({ success: true });
-  });
+  res.clearCookie('auth_session', { path: '/' });
+  res.clearCookie('reg_challenge_token', { path: '/' });
+  res.clearCookie('login_challenge_token', { path: '/' });
+  res.json({ success: true });
 });
 
 // 9. 비공개 데이터 조회 (인증된 사용자 본인 데이터 반환 - T08-C16, C17)
 app.get('/api/vault', (req, res) => {
-  if (!req.session.userId) {
+  const userId = getSessionUserId(req);
+  if (!userId) {
     return res.status(401).json({ error: '인증 필요: 패스키로 로그인해야 비공개 자료를 열람할 수 있습니다.' });
   }
-  const user = USERS_DB[req.session.userId];
+  const user = USERS_DB[userId];
   if (!user) return res.status(404).json({ error: '사용자를 찾을 수 없습니다.' });
   res.json({
     owner: user.username,
@@ -367,10 +463,10 @@ app.get('/api/vault', (req, res) => {
 
 // 10. 타인 데이터 조회 시도 (권한 격리 및 IDOR 방어 검증 - T08-C37, C38, C40, C41)
 app.get('/api/vault/:targetUserId', (req, res) => {
-  if (!req.session.userId) {
+  const currentUserId = getSessionUserId(req);
+  if (!currentUserId) {
     return res.status(401).json({ error: '인증 필요: 패스키 로그인이 필요합니다.' });
   }
-  const currentUserId = req.session.userId;
   const targetUserId = req.params.targetUserId;
 
   if (currentUserId !== targetUserId) {
@@ -390,6 +486,20 @@ app.get('/api/vault/:targetUserId', (req, res) => {
   });
 });
 
+// 루트 요청 파일 서빙
+app.get('/', (req, res) => {
+  const indexPath = [
+    path.join(__dirname, 'public', 'index.html'),
+    path.join(__dirname, 'index.html'),
+    path.join(process.cwd(), 'index.html')
+  ].find(p => fs.existsSync(p));
+  if (indexPath) {
+    res.sendFile(indexPath);
+  } else {
+    res.status(404).send('index.html not found');
+  }
+});
+
 // 서버 기동 (로컬 및 일반 서버 환경)
 if (process.env.NODE_ENV !== 'test' && !process.env.VERCEL) {
   app.listen(PORT, () => {
@@ -398,4 +508,4 @@ if (process.env.NODE_ENV !== 'test' && !process.env.VERCEL) {
 }
 
 export default app;
-export { USERS_DB };
+export { USERS_DB, createSignedToken, verifySignedToken };

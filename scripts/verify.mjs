@@ -12,6 +12,7 @@ const server = http.createServer(app);
 class TestClient {
   constructor(baseUrl) {
     this.baseUrl = baseUrl;
+    this.cookieMap = {};
     this.cookies = '';
   }
 
@@ -28,12 +29,21 @@ class TestClient {
       headers
     });
 
-    const setCookie = res.headers.get('set-cookie');
-    if (setCookie) {
-      // connect.sid 쿠키 저장
-      const sid = setCookie.split(';')[0];
-      this.cookies = sid;
+    const setCookies = typeof res.headers.getSetCookie === 'function'
+      ? res.headers.getSetCookie()
+      : (res.headers.get('set-cookie') ? [res.headers.get('set-cookie')] : []);
+
+    for (const cStr of setCookies) {
+      const parts = cStr.split(';')[0].trim().split('=');
+      const name = parts[0].trim();
+      const val = parts.slice(1).join('=');
+      if (val === '') {
+        delete this.cookieMap[name];
+      } else {
+        this.cookieMap[name] = val;
+      }
     }
+    this.cookies = Object.entries(this.cookieMap).map(([k, v]) => `${k}=${v}`).join('; ');
 
     let body;
     const text = await res.text();
@@ -192,6 +202,10 @@ function maskValue(val) {
 }
 
 async function runVerification() {
+  // 테스트 실행 전 인메모리 유저 DB 초기화
+  USERS_DB.regista_master.credentials = [];
+  USERS_DB.scout_guest.credentials = [];
+
   await new Promise(resolve => server.listen(PORT, resolve));
   console.log(`[VERIFY] Test server running on port ${PORT}\n`);
 

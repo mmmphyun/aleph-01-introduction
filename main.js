@@ -575,7 +575,10 @@ stripItems.forEach(btn => {
       const verifyRes = await fetch('/api/auth/register-verify', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(attResp)
+        body: JSON.stringify({
+          attestationResponse: attResp,
+          challengeToken: options.challengeToken
+        })
       });
       const verifyData = await parseJsonResponse(verifyRes);
 
@@ -627,7 +630,10 @@ stripItems.forEach(btn => {
       const verifyRes = await fetch('/api/auth/login-verify', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(assertResp)
+        body: JSON.stringify({
+          assertionResponse: assertResp,
+          challengeToken: options.challengeToken
+        })
       });
       const verifyData = await parseJsonResponse(verifyRes);
 
