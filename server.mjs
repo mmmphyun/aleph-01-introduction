@@ -1,6 +1,7 @@
 import express from 'express';
 import session from 'express-session';
 import path from 'path';
+import fs from 'fs';
 import { fileURLToPath } from 'url';
 import {
   generateRegistrationOptions,
@@ -80,11 +81,21 @@ const USERS_DB = {
 app.use(express.json());
 // ponytail: static serving node_modules browser bundle for zero-bundler setup
 app.use('/vendor/simplewebauthn-browser', express.static(path.join(__dirname, 'node_modules/@simplewebauthn/browser/dist/bundle')));
+app.use(express.static(path.join(__dirname, 'public')));
 app.use(express.static(__dirname));
 app.use(express.static(process.cwd()));
 
 app.get('/', (req, res) => {
-  res.sendFile(path.join(process.cwd(), 'index.html'));
+  const indexPath = [
+    path.join(__dirname, 'public', 'index.html'),
+    path.join(__dirname, 'index.html'),
+    path.join(process.cwd(), 'index.html')
+  ].find(p => fs.existsSync(p));
+  if (indexPath) {
+    res.sendFile(indexPath);
+  } else {
+    res.status(404).send('index.html not found');
+  }
 });
 
 // ponytail: hardcoded session secret for demo. Use process.env.SESSION_SECRET in production.
