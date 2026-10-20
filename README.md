@@ -35,4 +35,31 @@ AI를 단순 코드 자동완성 도구가 아닌 페어 프로그래머로 활�
 
 - **Core**: Vanilla HTML5, CSS3, JavaScript (ES6+)
 - **Graphics**: HTML5 Canvas, SVG Pitch Vector Overlay
-- **Deploy**: GitHub Pages
+- **Deploy**: GitHub Pages, Vercel (WebAuthn Full-Stack)
+
+---
+
+## T08: Passwordless WebAuthn Passkey (과제 8)
+
+소개 페이지 하단에 비밀번호 없이 FIDO2 WebAuthn 패스키로만 잠금 해제되는 비공개 전술실(`Locker Room Private Vault`)을 구축했습니다.
+
+### 핵심 아키텍처 및 보안 사양
+- **비밀번호 전면 배제 (Passwordless)**: 입력 필드 및 서버 저장소 어디에도 비밀번호가 존재하지 않으며, 오직 공개키 암호학(ES256/P-256) 서명 검증으로만 인증.
+- **공개/비공개 영역 엄격 분리**: 미인증 상태로 받은 HTML 페이지 소스 어디에도 비공개 텍스트가 노출되지 않으며, 서버 API(`GET /api/vault`)에서 401 Unauthorized로 원천 차단.
+- **일회용 질문(Challenge) 및 재사용 방어**: 매 등록/로그인 요청마다 암호학적 난수 챌린지를 발행하며, 1회 검증 즉시 폐기하여 Replay Attack 차단.
+- **멀티 테넌트 및 IDOR 방어**: 세션 소유자 식별자와 요청 대상 파라미터가 불일치할 경우 403 Forbidden 거절.
+- **기기 분실 대비**: 계정당 복수 패스키 등록 지원, 1개 삭제 후 남은 패스키 로그인 보장.
+
+### 로컬 실행 및 자동 검증
+```bash
+# 의존성 설치
+npm install
+
+# 서버 구동 (기본 포트: 3000)
+npm start
+
+# 20개 과제 통과 기준 전수 자동 검증 실행
+npm test
+```
+
+상세 검증 결과 및 6개 항목 설명서는 [REPORT.md](file:///c:/work/aleph-01-introduction/REPORT.md)에서 확인할 수 있습니다.
