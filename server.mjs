@@ -374,8 +374,8 @@ app.get('/api/vault/:targetUserId', (req, res) => {
   });
 });
 
-// 서버 기동
-if (process.env.NODE_ENV !== 'test') {
+// 서버 기동 (로컬 및 일반 서버 환경)
+if (process.env.NODE_ENV !== 'test' && !process.env.VERCEL) {
   app.listen(PORT, () => {
     console.log(`[Regista WebAuthn] Server listening on http://localhost:${PORT}`);
   });
