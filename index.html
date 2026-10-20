@@ -234,6 +234,81 @@
     </div>
   </section>
 
+  <!-- 과제 8: 비공개 영역 (Locker Room Private Vault) -->
+  <section class="vault-section" id="vault-section" aria-labelledby="vault-heading">
+    <div class="vault-container">
+      <div class="vault-header">
+        <div class="vault-badge" id="vault-status-badge">LOCKED · 잠김</div>
+        <h2 id="vault-heading" class="vault-title">Locker Room Private Vault · 비공개 전술실</h2>
+        <p class="vault-desc">
+          공개 소개 페이지 하단에 분리된 나만의 비공개 연구 공간입니다. 비밀번호 없이 FIDO2 WebAuthn 패스키로만 열람할 수 있습니다.
+          <br><small class="vault-subtext">※ 본 영역의 데이터는 테스트용 가상 데이터이며, 실제 개인 식별 정보는 일체 포함되어 있지 않습니다.</small>
+        </p>
+      </div>
+
+      <!-- 제어 패널 (비밀번호 입력칸 없음) -->
+      <div class="vault-control-panel">
+        <div class="vault-auth-box">
+          <div class="control-group">
+            <label for="vault-user-select">접근 계정</label>
+            <select id="vault-user-select" class="vault-select">
+              <option value="regista_master">한승윤 (regista_master)</option>
+              <option value="scout_guest">게스트 스카우터 (scout_guest)</option>
+            </select>
+          </div>
+
+          <div class="control-group" id="group-device-name">
+            <label for="vault-device-name">기기/패스키 이름</label>
+            <input type="text" id="vault-device-name" class="vault-input" placeholder="예: MacBook TouchID, Pixel 8" value="내 기기">
+          </div>
+
+          <div class="vault-btn-group">
+            <button type="button" class="vault-btn btn-register" id="btn-register-passkey">패스키 등록</button>
+            <button type="button" class="vault-btn btn-login" id="btn-login-passkey">패스키로 잠금해제</button>
+            <button type="button" class="vault-btn btn-logout" id="btn-logout" style="display: none;">로그아웃</button>
+          </div>
+        </div>
+
+        <div class="vault-feedback" id="vault-feedback" aria-live="polite"></div>
+      </div>
+
+      <!-- 비공개 데이터 렌더링 영역 (인증 전에는 안내문만 표시, 소스상 비공개 데이터 완전 배제) -->
+      <div class="vault-content-wrapper" id="vault-content-wrapper">
+        <div class="vault-locked-placeholder" id="vault-placeholder">
+          <div class="lock-icon" aria-hidden="true">🔒</div>
+          <h3>비공개 전술실이 잠겨 있습니다</h3>
+          <p>등록된 패스키로 기기 생체인증 또는 보안키 서명을 완료해야 서버에서 비공개 연구 노트를 안전하게 수신합니다.</p>
+        </div>
+
+        <div class="vault-unlocked-content" id="vault-unlocked-content" style="display: none;">
+          <div class="vault-meta-bar">
+            <span class="vault-welcome" id="vault-welcome-text">인증 사용자: 한승윤</span>
+          </div>
+
+          <!-- 비공개 3개 항목이 동적으로 삽입되는 컨테이너 -->
+          <div class="vault-cards-grid" id="vault-cards-grid"></div>
+
+          <!-- 패스키 관리 영역 (이름, 등록일시, 삭제 기능) -->
+          <div class="vault-keys-management">
+            <h3>등록된 패스키 관리</h3>
+            <p class="keys-desc">기기 분실에 대비해 2개 이상의 패스키를 등록해 두는 것을 권장합니다.</p>
+            <div id="vault-keys-list" class="keys-list"></div>
+            <div id="vault-keys-policy" class="keys-policy-note">
+              ※ 패스키를 모두 삭제하여 0개가 되면 패스키 로그인이 불가능하며, 본 화면에서 새 패스키를 재등록해야 합니다.
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- WebAuthn Browser Bundle & Fallback -->
+  <script src="/vendor/simplewebauthn-browser/index.umd.min.js"></script>
+  <script>
+    if (!window.SimpleWebAuthnBrowser) {
+      document.write('<script src="https://unpkg.com/@simplewebauthn/browser@14.0.0/dist/bundle/index.umd.min.js"><\/script>');
+    }
+  </script>
   <script src="main.js"></script>
 </body>
 </html>

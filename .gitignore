@@ -6,5 +6,6 @@
 .DS_Store
 Thumbs.db
 
-# 개발용 메모
-docs/
+# Node
+node_modules/
+.npm/

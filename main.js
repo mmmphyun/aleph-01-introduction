@@ -401,3 +401,262 @@ stripItems.forEach(btn => {
     }
   });
 });
+
+// =========================================================================
+// 과제 8: Locker Room Private Vault (FIDO2 WebAuthn 패스키 인증 연동)
+// =========================================================================
+(function initVault() {
+  const badgeEl = document.getElementById('vault-status-badge');
+  const feedbackEl = document.getElementById('vault-feedback');
+  const placeholderEl = document.getElementById('vault-placeholder');
+  const unlockedEl = document.getElementById('vault-unlocked-content');
+  const userSelect = document.getElementById('vault-user-select');
+  const deviceNameInput = document.getElementById('vault-device-name');
+  const btnRegister = document.getElementById('btn-register-passkey');
+  const btnLogin = document.getElementById('btn-login-passkey');
+  const btnLogout = document.getElementById('btn-logout');
+  const cardsGrid = document.getElementById('vault-cards-grid');
+  const keysList = document.getElementById('vault-keys-list');
+  const welcomeText = document.getElementById('vault-welcome-text');
+
+  if (!badgeEl || !btnRegister || !btnLogin) return;
+
+  function setFeedback(msg, type = 'info') {
+    feedbackEl.textContent = msg;
+    feedbackEl.className = 'vault-feedback ' + type;
+  }
+
+  function setVaultLocked(isLocked) {
+    if (isLocked) {
+      badgeEl.textContent = 'LOCKED · 잠김';
+      badgeEl.classList.remove('unlocked');
+      placeholderEl.style.display = 'block';
+      unlockedEl.style.display = 'none';
+      btnLogout.style.display = 'none';
+      btnLogin.style.display = 'inline-block';
+      btnRegister.style.display = 'inline-block';
+      cardsGrid.innerHTML = '';
+    } else {
+      badgeEl.textContent = 'UNLOCKED · 열림';
+      badgeEl.classList.add('unlocked');
+      placeholderEl.style.display = 'none';
+      unlockedEl.style.display = 'block';
+      btnLogout.style.display = 'inline-block';
+    }
+  }
+
+  async function loadCredentials() {
+    try {
+      const res = await fetch('/api/auth/credentials');
+      if (!res.ok) return;
+      const creds = await res.json();
+      if (!creds || creds.length === 0) {
+        keysList.innerHTML = '<p class="keys-policy-note" style="color: #fca5a5;">등록된 패스키가 없습니다. 새 패스키를 등록해야 다시 로그인할 수 있습니다.</p>';
+        return;
+      }
+      keysList.innerHTML = creds.map(c => `
+        <div class="key-item">
+          <div class="key-info">
+            <span class="key-name">🔑 ${escapeHtml(c.deviceName)}</span>
+            <span class="key-date">등록일: ${new Date(c.createdAt).toLocaleString('ko-KR')}</span>
+          </div>
+          <button type="button" class="btn-key-delete" data-id="${c.id}">삭제</button>
+        </div>
+      `).join('');
+
+      keysList.querySelectorAll('.btn-key-delete').forEach(btn => {
+        btn.addEventListener('click', async () => {
+          const credId = btn.dataset.id;
+          if (!confirm('이 패스키를 삭제하시겠습니까?')) return;
+          try {
+            const delRes = await fetch(`/api/auth/credentials/${credId}`, { method: 'DELETE' });
+            const data = await delRes.json();
+            if (data.deleted) {
+              setFeedback('패스키가 삭제되었습니다. 잔여 키: ' + data.remainingCount + '개', 'info');
+              loadCredentials();
+            }
+          } catch (err) {
+            setFeedback('패스키 삭제 중 오류가 발생했습니다.', 'error');
+          }
+        });
+      });
+    } catch (err) {
+      console.error('Failed to load credentials:', err);
+    }
+  }
+
+  async function loadVault() {
+    try {
+      const res = await fetch('/api/vault');
+      if (res.status === 401) {
+        setVaultLocked(true);
+        return;
+      }
+      if (!res.ok) {
+        throw new Error('비공개 데이터를 불러오지 못했습니다.');
+      }
+      const data = await res.json();
+      setVaultLocked(false);
+      welcomeText.textContent = `인증 사용자: ${data.ownerName} (${data.owner})`;
+
+      cardsGrid.innerHTML = data.vault.map(item => `
+        <article class="vault-card">
+          <div>
+            <p class="vault-card-cat">${escapeHtml(item.category)}</p>
+            <h4>${escapeHtml(item.title)}</h4>
+            <p>${escapeHtml(item.summary)}</p>
+          </div>
+          <span class="vault-card-date">기록일자: ${escapeHtml(item.date)}</span>
+        </article>
+      `).join('');
+
+      loadCredentials();
+    } catch (err) {
+      setVaultLocked(true);
+      setFeedback(err.message, 'error');
+    }
+  }
+
+  function escapeHtml(str) {
+    if (!str) return '';
+    return String(str)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#39;');
+  }
+
+  // 1. 등록 (WebAuthn Registration)
+  btnRegister.addEventListener('click', async () => {
+    if (!window.SimpleWebAuthnBrowser) {
+      setFeedback('브라우저 WebAuthn 라이브러리가 로드되지 않았습니다.', 'error');
+      return;
+    }
+    const username = userSelect.value;
+    const deviceName = deviceNameInput.value.trim() || '내 기기';
+    setFeedback('서버에서 등록용 일회용 챌린지를 생성하는 중...', 'info');
+
+    try {
+      const optRes = await fetch('/api/auth/register-options', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username, deviceName })
+      });
+      if (!optRes.ok) {
+        const errData = await optRes.json();
+        throw new Error(errData.error || '등록 옵션 발급 실패');
+      }
+      const options = await optRes.json();
+
+      setFeedback('기기 생체인증/보안키 대화상자를 확인해 주세요...', 'info');
+
+      let attResp;
+      try {
+        attResp = await SimpleWebAuthnBrowser.startRegistration({ optionsJSON: options });
+      } catch (err) {
+        // T08-C25: 등록 취소 시 친절한 안내 및 서버 무저장 안내
+        if (err.name === 'NotAllowedError' || err.name === 'AbortError') {
+          setFeedback('사용자가 패스키 등록을 취소했습니다. 서버에 어떠한 키도 저장되지 않았습니다.', 'info');
+          return;
+        }
+        throw err;
+      }
+
+      setFeedback('서버에서 공개키 서명을 검증하는 중...', 'info');
+      const verifyRes = await fetch('/api/auth/register-verify', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(attResp)
+      });
+      const verifyData = await verifyRes.json();
+
+      if (!verifyRes.ok || !verifyData.verified) {
+        throw new Error(verifyData.error || '공개키 검증에 실패했습니다.');
+      }
+
+      setFeedback(`새 패스키('${deviceName}')가 등록되었습니다. 비공개 전술실이 열렸습니다.`, 'success');
+      loadVault();
+    } catch (err) {
+      setFeedback(err.message, 'error');
+    }
+  });
+
+  // 2. 로그인 (WebAuthn Authentication)
+  btnLogin.addEventListener('click', async () => {
+    if (!window.SimpleWebAuthnBrowser) {
+      setFeedback('브라우저 WebAuthn 라이브러리가 로드되지 않았습니다.', 'error');
+      return;
+    }
+    const username = userSelect.value;
+    setFeedback('서버에서 로그인용 일회용 챌린지를 발급받는 중...', 'info');
+
+    try {
+      const optRes = await fetch('/api/auth/login-options', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username })
+      });
+      if (!optRes.ok) {
+        const errData = await optRes.json();
+        throw new Error(errData.error || '로그인 옵션 요청 실패');
+      }
+      const options = await optRes.json();
+
+      setFeedback('기기 패스키 서명을 요청하는 중입니다...', 'info');
+
+      let assertResp;
+      try {
+        assertResp = await SimpleWebAuthnBrowser.startAuthentication({ optionsJSON: options });
+      } catch (err) {
+        if (err.name === 'NotAllowedError' || err.name === 'AbortError') {
+          setFeedback('패스키 로그인이 취소되었습니다.', 'info');
+          return;
+        }
+        throw err;
+      }
+
+      setFeedback('서버에서 패스키 서명 진위 여부를 확인하는 중...', 'info');
+      const verifyRes = await fetch('/api/auth/login-verify', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(assertResp)
+      });
+      const verifyData = await verifyRes.json();
+
+      if (!verifyRes.ok || !verifyData.verified) {
+        throw new Error(verifyData.error || '서명 검증 실패: 패스키 인증에 실패했습니다.');
+      }
+
+      setFeedback('패스키 인증 완료. 비공개 전술실이 잠금 해제되었습니다.', 'success');
+      loadVault();
+    } catch (err) {
+      setFeedback(err.message, 'error');
+    }
+  });
+
+  // 3. 로그아웃
+  btnLogout.addEventListener('click', async () => {
+    try {
+      await fetch('/api/auth/logout', { method: 'POST' });
+      setVaultLocked(true);
+      setFeedback('로그아웃되었습니다. 비공개 전술실이 다시 잠겼습니다.', 'info');
+    } catch (err) {
+      setFeedback('로그아웃 중 오류가 발생했습니다.', 'error');
+    }
+  });
+
+  // 초기 로딩 시 세션 상태 확인
+  fetch('/api/auth/session')
+    .then(res => res.json())
+    .then(data => {
+      if (data && data.authenticated) {
+        userSelect.value = data.user.username;
+        loadVault();
+      } else {
+        setVaultLocked(true);
+      }
+    })
+    .catch(() => setVaultLocked(true));
+})();
+
